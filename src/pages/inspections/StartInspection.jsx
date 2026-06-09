@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { DAILY_FACILITY_ITEMS, PRE_OP_ITEMS } from '../../data/checklists'
@@ -61,7 +61,7 @@ export default function StartInspection() {
         items,
         failedItemCount: failed.length,
         signature: { signedBy: signerName.trim(), signedAt: serverTimestamp() },
-        auditLog: [{ action: 'created', changedBy: userInfo, changedAt: serverTimestamp(), changes: {} }],
+        auditLog: [{ action: 'created', changedBy: userInfo, changedAt: Timestamp.now(), changes: {} }],
       })
 
       const caNumbers = []
@@ -83,7 +83,7 @@ export default function StartInspection() {
           supervisorSignOff: null,
           createdAt: serverTimestamp(),
           createdBy: userInfo,
-          auditLog: [{ action: 'created', changedBy: userInfo, changedAt: serverTimestamp(), changes: {} }],
+          auditLog: [{ action: 'created', changedBy: userInfo, changedAt: Timestamp.now(), changes: {} }],
         })
         caNumbers.push(caNumber)
       }

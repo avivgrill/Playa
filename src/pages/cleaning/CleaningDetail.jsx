@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { doc, getDoc, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, serverTimestamp, arrayUnion, Timestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { formatDateTime } from '../../utils/format'
@@ -30,7 +30,7 @@ export default function CleaningDetail() {
       const update = {
         verificationStatus: 'verified',
         verification: { verifiedBy: userInfo, verifiedAt: serverTimestamp(), notes: verNotes.trim() },
-        auditLog: arrayUnion({ action: 'verified', changedBy: userInfo, changedAt: serverTimestamp(), changes: { verificationStatus: { from: 'pending', to: 'verified' } } }),
+        auditLog: arrayUnion({ action: 'verified', changedBy: userInfo, changedAt: Timestamp.now(), changes: { verificationStatus: { from: 'pending', to: 'verified' } } }),
       }
       await updateDoc(doc(db, 'cleaningLogs', id), update)
       setLog(prev => ({ ...prev, verificationStatus: 'verified', verification: { verifiedBy: userInfo, notes: verNotes.trim() } }))

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import PhotoUpload from '../../components/PhotoUpload'
@@ -35,7 +35,7 @@ export default function NewCleaningLog() {
         createdBy: userInfo,
         verificationStatus: 'pending',
         verification: null,
-        auditLog: [{ action: 'created', changedBy: userInfo, changedAt: serverTimestamp(), changes: {} }],
+        auditLog: [{ action: 'created', changedBy: userInfo, changedAt: Timestamp.now(), changes: {} }],
       })
       navigate('/cleaning')
     } catch (err) {

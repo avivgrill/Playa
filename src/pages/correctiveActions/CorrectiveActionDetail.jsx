@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { doc, getDoc, updateDoc, serverTimestamp, arrayUnion, collection, getDocs, query, where } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, serverTimestamp, arrayUnion, Timestamp, collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { formatDate, formatDateTime } from '../../utils/format'
@@ -45,7 +45,7 @@ export default function CorrectiveActionDetail() {
     try {
       await updateDoc(doc(db, 'correctiveActions', id), {
         ...updates,
-        auditLog: arrayUnion({ action: auditAction, changedBy: userInfo, changedAt: serverTimestamp(), changes: {} }),
+        auditLog: arrayUnion({ action: auditAction, changedBy: userInfo, changedAt: Timestamp.now(), changes: {} }),
       })
       setCa(prev => ({ ...prev, ...updates }))
     } catch (err) {
