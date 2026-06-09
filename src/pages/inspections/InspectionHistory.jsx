@@ -5,6 +5,21 @@ import { db } from '../../firebase/config'
 import { formatDateTime } from '../../utils/format'
 import { card, badge } from '../../styles/common'
 
+const TYPE_LABELS = {
+  daily_facility: 'Daily Facility Inspection',
+  pre_operational: 'Pre-Operational Inspection',
+  weekly_facility: 'Weekly Facility Inspection',
+  monthly_facility: 'Monthly Facility Verification',
+}
+
+const FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'daily_facility', label: 'Daily' },
+  { value: 'pre_operational', label: 'Pre-Op' },
+  { value: 'weekly_facility', label: 'Weekly' },
+  { value: 'monthly_facility', label: 'Monthly' },
+]
+
 export default function InspectionHistory() {
   const navigate = useNavigate()
   const [inspections, setInspections] = useState([])
@@ -23,24 +38,23 @@ export default function InspectionHistory() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
         <h1 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Inspection History</h1>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button style={navigate === filter ? filterBtnActive : filterBtn(filter === 'all')} onClick={() => setFilter('all')}>All</button>
-          <button style={filterBtn(filter === 'daily_facility')} onClick={() => setFilter('daily_facility')}>Daily</button>
-          <button style={filterBtn(filter === 'pre_operational')} onClick={() => setFilter('pre_operational')}>Pre-Op</button>
-        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-        <button style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 8, padding: '0.6rem 1rem', fontSize: '0.875rem', cursor: 'pointer' }}
-          onClick={() => navigate('/inspections/new/daily_facility')}>
-          + Daily Inspection
-        </button>
-        <button style={{ background: '#0891b2', color: '#fff', border: 'none', borderRadius: 8, padding: '0.6rem 1rem', fontSize: '0.875rem', cursor: 'pointer' }}
-          onClick={() => navigate('/inspections/new/pre_operational')}>
-          + Pre-Op Inspection
-        </button>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+        {FILTERS.map(f => (
+          <button key={f.value} style={filterBtn(filter === f.value)} onClick={() => setFilter(f.value)}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <button style={newBtn('#1d4ed8')} onClick={() => navigate('/inspections/new/daily_facility')}>+ Daily</button>
+        <button style={newBtn('#0891b2')} onClick={() => navigate('/inspections/new/pre_operational')}>+ Pre-Op</button>
+        <button style={newBtn('#7c3aed')} onClick={() => navigate('/inspections/new/weekly_facility')}>+ Weekly</button>
+        <button style={newBtn('#059669')} onClick={() => navigate('/inspections/new/monthly_facility')}>+ Monthly</button>
       </div>
 
       {loading ? <p style={{ color: '#9ca3af' }}>Loading…</p> : filtered.length === 0 ? (
@@ -50,7 +64,7 @@ export default function InspectionHistory() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.2rem' }}>
-                {insp.type === 'daily_facility' ? 'Daily Facility Inspection' : 'Pre-Operational Inspection'}
+                {TYPE_LABELS[insp.type] || insp.type}
               </div>
               <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
                 {insp.createdBy?.displayName || insp.createdBy?.email} · {formatDateTime(insp.completedAt)}
@@ -80,4 +94,9 @@ const filterBtn = (active) => ({
   fontSize: '0.8rem',
   cursor: 'pointer',
 })
-const filterBtnActive = filterBtn(true)
+
+const newBtn = (bg) => ({
+  background: bg, color: '#fff', border: 'none',
+  borderRadius: 8, padding: '0.5rem 0.875rem',
+  fontSize: '0.8rem', cursor: 'pointer',
+})

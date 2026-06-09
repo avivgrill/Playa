@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
-import { DAILY_FACILITY_ITEMS, PRE_OP_ITEMS } from '../../data/checklists'
+import { DAILY_FACILITY_ITEMS, PRE_OP_ITEMS, WEEKLY_FACILITY_ITEMS, MONTHLY_FACILITY_ITEMS } from '../../data/checklists'
 import { getNextCANumber } from '../../utils/caNumber'
 import PhotoUpload from '../../components/PhotoUpload'
 import { card, btn, input, label } from '../../styles/common'
@@ -13,8 +13,20 @@ export default function StartInspection() {
   const navigate = useNavigate()
   const { currentUser } = useAuth()
 
-  const checklist = type === 'daily_facility' ? DAILY_FACILITY_ITEMS : PRE_OP_ITEMS
-  const title = type === 'daily_facility' ? 'Daily Facility Inspection' : 'Pre-Operational Inspection'
+  const CHECKLISTS = {
+    daily_facility: DAILY_FACILITY_ITEMS,
+    pre_operational: PRE_OP_ITEMS,
+    weekly_facility: WEEKLY_FACILITY_ITEMS,
+    monthly_facility: MONTHLY_FACILITY_ITEMS,
+  }
+  const TITLES = {
+    daily_facility: 'Daily Facility Inspection',
+    pre_operational: 'Pre-Operational Inspection',
+    weekly_facility: 'Weekly Facility Inspection',
+    monthly_facility: 'Monthly Facility Verification',
+  }
+  const checklist = CHECKLISTS[type] || DAILY_FACILITY_ITEMS
+  const title = TITLES[type] || 'Inspection'
 
   const [items, setItems] = useState(checklist.map(i => ({ ...i, result: null, notes: '', photoUrl: null, photoPath: null })))
   const [step, setStep] = useState('checklist')
@@ -92,7 +104,7 @@ export default function StartInspection() {
       setStep('done')
     } catch (err) {
       console.error(err)
-      alert('Error submitting. Please try again.')
+      alert(`Submit failed: ${err.code || err.message || 'Unknown error'}`)
     }
     setSubmitting(false)
   }

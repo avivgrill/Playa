@@ -3,3 +3,4 @@ dist/
 .firebase/
 .env
 *.local
+service-account.json

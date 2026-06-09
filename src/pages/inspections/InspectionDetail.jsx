@@ -21,7 +21,13 @@ export default function InspectionDetail() {
   if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>Loading…</p>
   if (!insp) return <p style={{ color: '#dc2626', padding: '1rem' }}>Inspection not found.</p>
 
-  const title = insp.type === 'daily_facility' ? 'Daily Facility Inspection' : 'Pre-Operational Inspection'
+  const TYPE_LABELS = {
+    daily_facility: 'Daily Facility Inspection',
+    pre_operational: 'Pre-Operational Inspection',
+    weekly_facility: 'Weekly Facility Inspection',
+    monthly_facility: 'Monthly Facility Verification',
+  }
+  const title = TYPE_LABELS[insp.type] || insp.type
 
   return (
     <div>

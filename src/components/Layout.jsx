@@ -9,6 +9,8 @@ const NAV_ITEMS = [
     children: [
       { label: 'Start Daily Inspection', path: '/inspections/new/daily_facility' },
       { label: 'Start Pre-Op Inspection', path: '/inspections/new/pre_operational' },
+      { label: 'Start Weekly Inspection', path: '/inspections/new/weekly_facility' },
+      { label: 'Start Monthly Verification', path: '/inspections/new/monthly_facility' },
       { label: 'Inspection History', path: '/inspections' },
     ],
   },
@@ -19,7 +21,6 @@ const NAV_ITEMS = [
       { label: 'Cleaning Log History', path: '/cleaning' },
     ],
   },
-  { label: 'Corrective Actions', path: '/corrective-actions' },
   { label: 'Records', path: '/records' },
 ]
 
