@@ -1,8 +1,11 @@
 'use strict'
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
-let admin
-try { admin = require('firebase-admin') } catch {
+let initializeApp, cert, getFirestore
+try {
+  ;({ initializeApp, cert } = require('firebase-admin/app'))
+  ;({ getFirestore }        = require('firebase-admin/firestore'))
+} catch {
   console.error('firebase-admin not found. Run: npm install --save-dev firebase-admin')
   process.exit(1)
 }
@@ -17,8 +20,8 @@ try {
   process.exit(1)
 }
 
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
-const db = admin.firestore()
+initializeApp({ credential: cert(serviceAccount) })
+const db = getFirestore()
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 const AVIV    = { uid: 'seed-aviv',    displayName: 'Aviv Grill',       email: 'avivgrill@gmail.com' }

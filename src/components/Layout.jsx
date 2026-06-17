@@ -21,11 +21,42 @@ const NAV_ITEMS = [
       { label: 'Cleaning Log History', path: '/cleaning' },
     ],
   },
+  {
+    label: 'Operations', key: 'operations',
+    children: [
+      { label: 'SOPs', path: '/operations/sops' },
+      { label: 'Production Batches', path: '/operations/batches' },
+      { label: 'Production Logs', path: '/operations/logs' },
+      { label: 'Customers', path: '/operations/customers' },
+      { label: '─────────────', path: null, divider: true },
+      { label: 'Ingredients', path: '/operations/ingredients' },
+      { label: 'Receive Inventory', path: '/operations/receive' },
+      { label: 'Ingredient Lots', path: '/operations/lots' },
+      { label: 'Recall Trace', path: '/operations/recall' },
+    ],
+  },
   { label: 'Records', path: '/records' },
 ]
 
+function buildNavItems(isAdmin, hasTimecard) {
+  const items = [...NAV_ITEMS]
+  if (hasTimecard) {
+    items.push({ label: 'Timecard', path: '/timecard' })
+  }
+  if (isAdmin) {
+    items.push({
+      label: 'Admin', key: 'admin',
+      children: [
+        { label: 'User Roles', path: '/admin/users' },
+        { label: 'All Timecards', path: '/admin/timecards' },
+      ],
+    })
+  }
+  return items
+}
+
 export default function Layout() {
-  const { currentUser, logout } = useAuth()
+  const { currentUser, isAdmin, hasTimecard, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -51,6 +82,7 @@ export default function Layout() {
 
   const handleLogout = async () => { await logout(); navigate('/login') }
 
+  const navItems = buildNavItems(isAdmin, hasTimecard)
   const isActivePath = (key) => location.pathname.startsWith(`/${key}`)
 
   return (
@@ -61,7 +93,7 @@ export default function Layout() {
 
           {!isMobile && (
             <div style={s.desktopLinks}>
-              {NAV_ITEMS.map(item =>
+              {navItems.map(item =>
                 item.children ? (
                   <div key={item.key} style={{ position: 'relative' }}>
                     <button
@@ -72,9 +104,10 @@ export default function Layout() {
                     </button>
                     {openDrop === item.key && (
                       <div style={s.dropdown} onClick={e => e.stopPropagation()}>
-                        {item.children.map(c => (
-                          <Link key={c.path} to={c.path} style={s.dropItem}>{c.label}</Link>
-                        ))}
+                        {item.children.map(c => c.divider
+                          ? <div key="divider" style={{ borderTop: '1px solid #e5e7eb', margin: '0.25rem 0' }} />
+                          : <Link key={c.path} to={c.path} style={s.dropItem}>{c.label}</Link>
+                        )}
                       </div>
                     )}
                   </div>
@@ -104,7 +137,7 @@ export default function Layout() {
 
         {isMobile && menuOpen && (
           <div style={s.mobileMenu}>
-            {NAV_ITEMS.map(item =>
+            {navItems.map(item =>
               item.children ? (
                 <div key={item.key}>
                   <button
@@ -113,9 +146,10 @@ export default function Layout() {
                   >
                     {item.label} {openDrop === item.key ? '▴' : '▾'}
                   </button>
-                  {openDrop === item.key && item.children.map(c => (
-                    <Link key={c.path} to={c.path} style={s.mobileSub}>{c.label}</Link>
-                  ))}
+                  {openDrop === item.key && item.children.map(c => c.divider
+                    ? <div key="divider" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '0.25rem 0' }} />
+                    : <Link key={c.path} to={c.path} style={s.mobileSub}>{c.label}</Link>
+                  )}
                 </div>
               ) : (
                 <Link key={item.path} to={item.path} style={s.mobileItem}>{item.label}</Link>

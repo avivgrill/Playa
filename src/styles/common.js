@@ -81,4 +81,15 @@ export const badge = {
   complete: { background: '#f3e8ff', color: '#7e22ce', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
   verified: { background: '#dcfce7', color: '#15803d', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
   pending: { background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
+  // Ingredient lot statuses
+  available: { background: '#dcfce7', color: '#15803d', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
+  used: { background: '#f3f4f6', color: '#6b7280', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
+  recalled: { background: '#fee2e2', color: '#b91c1c', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
+  // Operations statuses
+  scheduled: { background: '#fef9c3', color: '#a16207', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
+  in_production: { background: '#dbeafe', color: '#1d4ed8', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
+  hold: { background: '#fee2e2', color: '#b91c1c', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
+  released: { background: '#dcfce7', color: '#15803d', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
+  active: { background: '#dcfce7', color: '#15803d', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
+  inactive: { background: '#f3f4f6', color: '#6b7280', padding: '0.2rem 0.6rem', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 },
 }
