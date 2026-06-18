@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore'
 import { db } from '../../firebase/config'
-import { formatDateTime } from '../../utils/format'
+import { formatDate } from '../../utils/format'
 import { card, badge, btn } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 export default function ProductionLogList() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getDocs(query(collection(db, 'productionLogs'), orderBy('startTime', 'desc'), limit(50)))
+    getDocs(query(collection(db, 'productionLogs'), orderBy('createdAt', 'desc'), limit(50)))
       .then(snap => {
         setLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })))
         setLoading(false)
@@ -21,14 +23,14 @@ export default function ProductionLogList() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={pageTitle}>Production Logs</h1>
-        <button style={btn.primary} onClick={() => navigate('/operations/logs/new')}>+ New Log</button>
+        <h1 style={pageTitle}>{t('Production Runs')}</h1>
+        <button style={btn.primary} onClick={() => navigate('/operations/logs/new')}>{t('+ New Run')}</button>
       </div>
 
-      {loading && <p style={muted}>Loading…</p>}
+      {loading && <p style={muted}>{t('Loading…')}</p>}
 
       {!loading && logs.length === 0 && (
-        <p style={muted}>No production logs yet.</p>
+        <p style={muted}>{t('No production runs yet.')}</p>
       )}
 
       {logs.map(log => (
@@ -45,13 +47,12 @@ export default function ProductionLogList() {
               <div style={{ fontWeight: 600, color: '#111827' }}>{log.productName || log.batchNumber}</div>
               <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>{log.operator}</div>
               <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                {formatDateTime(log.startTime)}
-                {log.endTime ? ` – ${formatDateTime(log.endTime)}` : ''}
+                {formatDate(log.date || log.startTime)}
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
-              {log.signature?.signedBy && <span style={badge.verified}>Signed</span>}
-              {log.deviations && <span style={badge.hold}>Deviation</span>}
+              {log.signature?.signedBy && <span style={badge.verified}>{t('Signed')}</span>}
+              {log.deviations && <span style={badge.hold}>{t('Deviation')}</span>}
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { collection, query, orderBy, getDocs, limit } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { formatDateTime } from '../../utils/format'
 import { card, badge } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 const TYPE_LABELS = {
   daily_facility: 'Daily Facility Inspection',
@@ -22,6 +23,7 @@ const FILTERS = [
 
 export default function InspectionHistory() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [inspections, setInspections] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
@@ -39,7 +41,7 @@ export default function InspectionHistory() {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Inspection History</h1>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('Inspection History')}</h1>
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
@@ -57,8 +59,8 @@ export default function InspectionHistory() {
         <button style={newBtn('#059669')} onClick={() => navigate('/inspections/new/monthly_facility')}>+ Monthly</button>
       </div>
 
-      {loading ? <p style={{ color: '#9ca3af' }}>Loading…</p> : filtered.length === 0 ? (
-        <p style={{ color: '#9ca3af', textAlign: 'center', marginTop: '2rem' }}>No inspections found.</p>
+      {loading ? <p style={{ color: '#9ca3af' }}>{t('Loading…')}</p> : filtered.length === 0 ? (
+        <p style={{ color: '#9ca3af', textAlign: 'center', marginTop: '2rem' }}>{t('No records match your filters.')}</p>
       ) : filtered.map(insp => (
         <div key={insp.id} style={{ ...card, cursor: 'pointer' }} onClick={() => navigate(`/inspections/${insp.id}`)}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
@@ -71,12 +73,12 @@ export default function InspectionHistory() {
               </div>
               {insp.failedItemCount > 0 && (
                 <div style={{ fontSize: '0.75rem', color: '#dc2626', marginTop: '0.2rem' }}>
-                  {insp.failedItemCount} item{insp.failedItemCount > 1 ? 's' : ''} failed
+                  {t('{{count}} item(s) failed', { count: insp.failedItemCount })}
                 </div>
               )}
             </div>
             <span style={insp.overallResult === 'pass' ? badge.pass : badge.fail}>
-              {insp.overallResult?.toUpperCase()}
+              {insp.overallResult === 'pass' ? t('PASS') : t('FAIL')}
             </span>
           </div>
         </div>

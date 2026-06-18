@@ -4,9 +4,11 @@ import { collection, query, orderBy, getDocs, limit } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { formatDateTime } from '../../utils/format'
 import { card, badge } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 export default function CleaningHistory() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -21,17 +23,17 @@ export default function CleaningHistory() {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', gap: '0.5rem' }}>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Cleaning Logs</h1>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('All Cleaning Logs')}</h1>
         <button
           style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 8, padding: '0.6rem 1rem', fontSize: '0.875rem', cursor: 'pointer' }}
           onClick={() => navigate('/cleaning/new')}
         >
-          + New Log
+          {t('+ New Cleaning Log')}
         </button>
       </div>
 
-      {loading ? <p style={{ color: '#9ca3af' }}>Loading…</p> : logs.length === 0 ? (
-        <p style={{ color: '#9ca3af', textAlign: 'center', marginTop: '2rem' }}>No cleaning logs yet.</p>
+      {loading ? <p style={{ color: '#9ca3af' }}>{t('Loading…')}</p> : logs.length === 0 ? (
+        <p style={{ color: '#9ca3af', textAlign: 'center', marginTop: '2rem' }}>{t('No cleaning logs yet.')}</p>
       ) : logs.map(log => (
         <div key={log.id} style={{ ...card, cursor: 'pointer' }} onClick={() => navigate(`/cleaning/${log.id}`)}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
@@ -45,7 +47,7 @@ export default function CleaningHistory() {
               </div>
             </div>
             <span style={log.verificationStatus === 'verified' ? badge.verified : badge.pending}>
-              {log.verificationStatus === 'verified' ? 'Verified' : 'Pending'}
+              {log.verificationStatus === 'verified' ? t('Verified') : t('Pending')}
             </span>
           </div>
         </div>

@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '../firebase/config'
+import { setLanguage } from '../i18n'
 
 const ADMIN_EMAIL = 'avivgrill@gmail.com'
 
@@ -40,6 +41,10 @@ export function AuthProvider({ children }) {
           // ADMIN_EMAIL is always admin regardless of Firestore flag
           setIsAdmin(role.isAdmin === true || user.email === ADMIN_EMAIL)
           setHasTimecard(role.hasTimecard === true)
+          // Restore saved language preference
+          if (role.language) {
+            setLanguage(role.language)
+          }
         }
       } else {
         setIsAdmin(false)
@@ -53,8 +58,17 @@ export function AuthProvider({ children }) {
 
   const logout = () => signOut(auth)
 
+  const saveLanguage = async (lang) => {
+    setLanguage(lang)
+    if (currentUser) {
+      try {
+        await updateDoc(doc(db, 'userRoles', currentUser.uid), { language: lang })
+      } catch (_) { /* non-critical */ }
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ currentUser, isAdmin, hasTimecard, logout }}>
+    <AuthContext.Provider value={{ currentUser, isAdmin, hasTimecard, logout, saveLanguage }}>
       {!loading && children}
     </AuthContext.Provider>
   )

@@ -4,9 +4,11 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { formatDate } from '../../utils/format'
 import { card, badge } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 export default function CorrectiveActionList() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [cas, setCas] = useState([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('open')
@@ -28,18 +30,18 @@ export default function CorrectiveActionList() {
 
   return (
     <div>
-      <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Corrective Actions</h1>
+      <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>{t('Corrective Actions')}</h1>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <TabBtn active={tab === 'open'} onClick={() => setTab('open')}>
-          Open {!loading && open.length > 0 && <span style={countBadge(open.some(c => isOverdue(c)))}>{open.length}</span>}
+          {t('Open')} {!loading && open.length > 0 && <span style={countBadge(open.some(c => isOverdue(c)))}>{open.length}</span>}
         </TabBtn>
-        <TabBtn active={tab === 'all'} onClick={() => setTab('all')}>All</TabBtn>
+        <TabBtn active={tab === 'all'} onClick={() => setTab('all')}>{t('All')}</TabBtn>
       </div>
 
-      {loading ? <p style={{ color: '#9ca3af' }}>Loading…</p> : displayed.length === 0 ? (
+      {loading ? <p style={{ color: '#9ca3af' }}>{t('Loading…')}</p> : displayed.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
-          {tab === 'open' ? '✅ No open corrective actions.' : 'No corrective actions yet.'}
+          {tab === 'open' ? t('✅ No open corrective actions.') : t('No corrective actions yet.')}
         </div>
       ) : displayed.map(ca => {
         const overdue = isOverdue(ca)
@@ -50,14 +52,14 @@ export default function CorrectiveActionList() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
                   <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#6b7280' }}>{ca.caNumber}</span>
-                  {overdue && <span style={{ fontSize: '0.7rem', background: '#fee2e2', color: '#b91c1c', padding: '0.1rem 0.4rem', borderRadius: 99, fontWeight: 700 }}>OVERDUE</span>}
+                  {overdue && <span style={{ fontSize: '0.7rem', background: '#fee2e2', color: '#b91c1c', padding: '0.1rem 0.4rem', borderRadius: 99, fontWeight: 700 }}>{t('OVERDUE')}</span>}
                 </div>
                 <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {ca.sourceItemLabel}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                  {ca.assignedTo ? `Assigned: ${ca.assignedTo.displayName || ca.assignedTo.email}` : 'Unassigned'}
-                  {ca.dueDate && ` · Due: ${formatDate(ca.dueDate)}`}
+                  {ca.assignedTo ? t('Assigned: {{name}}', { name: ca.assignedTo.displayName || ca.assignedTo.email }) : t('Unassigned')}
+                  {ca.dueDate && ` · ${t('Due: {{date}}', { date: formatDate(ca.dueDate) })}`}
                 </div>
               </div>
               <span style={badge[ca.status] || badge.open}>{ca.status?.replace('_', ' ')}</span>

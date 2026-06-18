@@ -4,6 +4,7 @@ import { doc, getDoc, addDoc, updateDoc, collection, serverTimestamp, Timestamp,
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { card, btn, input, label } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 const CATEGORIES = ['Base', 'Inclusions', 'Flavor', 'Preservative', 'Packaging', 'Other']
 const UNITS = ['lbs', 'oz', 'kg', 'g', 'units', 'cases', 'bags', 'gallons', 'liters']
@@ -13,6 +14,7 @@ export default function IngredientForm() {
   const { id } = useParams()
   const isEdit = id && id !== 'new'
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { currentUser } = useAuth()
 
   const [form, setForm] = useState({ name: '', category: 'Base', supplier: '', unit: 'lbs', status: 'active', notes: '' })
@@ -65,38 +67,38 @@ export default function IngredientForm() {
     }
   }
 
-  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>Loading…</p>
+  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>{t('Loading…')}</p>
 
   return (
     <div>
       <button style={backBtn} onClick={() => navigate(isEdit ? `/operations/ingredients/${id}` : '/operations/ingredients')}>
-        ← {isEdit ? 'Back' : 'Ingredients'}
+        {isEdit ? t('← Back') : t('← Ingredients')}
       </button>
-      <h1 style={pageTitle}>{isEdit ? 'Edit Ingredient' : 'New Ingredient'}</h1>
+      <h1 style={pageTitle}>{isEdit ? t('Edit Ingredient') : t('New Ingredient')}</h1>
 
       <form onSubmit={handleSubmit} style={card}>
-        <label style={label}>Ingredient Name *</label>
-        <input style={input} value={form.name} onChange={set('name')} placeholder="e.g. Dark Chocolate Chips" />
+        <label style={label}>{t('Ingredient Name *')}</label>
+        <input style={input} value={form.name} onChange={set('name')} placeholder={t('e.g. Dark Chocolate Chips')} />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <div className="form-row">
           <div>
-            <label style={label}>Category</label>
+            <label style={label}>{t('Category')}</label>
             <select style={input} value={form.category} onChange={set('category')}>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label style={label}>Unit of Measure</label>
+            <label style={label}>{t('Unit of Measure')}</label>
             <select style={input} value={form.unit} onChange={set('unit')}>
               {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
             </select>
           </div>
         </div>
 
-        <label style={label}>Supplier</label>
-        <input style={input} value={form.supplier} onChange={set('supplier')} placeholder="Supplier name" />
+        <label style={label}>{t('Supplier')}</label>
+        <input style={input} value={form.supplier} onChange={set('supplier')} placeholder={t('Supplier name')} />
 
-        <label style={label}>Allergens</label>
+        <label style={label}>{t('Allergens')}</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.875rem' }}>
           {ALLERGENS.map(a => (
             <label key={a} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.875rem', cursor: 'pointer', padding: '0.3rem 0.65rem', border: `1px solid ${allergens.includes(a) ? '#f59e0b' : '#d1d5db'}`, borderRadius: 20, background: allergens.includes(a) ? '#fef3c7' : '#fff', color: allergens.includes(a) ? '#92400e' : '#374151' }}>
@@ -106,21 +108,21 @@ export default function IngredientForm() {
           ))}
         </div>
 
-        <label style={label}>Status</label>
+        <label style={label}>{t('Status')}</label>
         <select style={input} value={form.status} onChange={set('status')}>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">{t('Active')}</option>
+          <option value="inactive">{t('Inactive')}</option>
         </select>
 
-        <label style={label}>Notes</label>
-        <textarea style={{ ...input, minHeight: 70, resize: 'vertical' }} value={form.notes} onChange={set('notes')} placeholder="Optional notes…" />
+        <label style={label}>{t('Notes')}</label>
+        <textarea style={{ ...input, minHeight: 70, resize: 'vertical' }} value={form.notes} onChange={set('notes')} placeholder={t('Optional notes…')} />
 
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
           <button type="submit" style={btn.primary} disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Ingredient'}
+            {saving ? t('Saving…') : isEdit ? t('Save Changes') : t('Add Ingredient')}
           </button>
           <button type="button" style={btn.secondary} onClick={() => navigate(isEdit ? `/operations/ingredients/${id}` : '/operations/ingredients')}>
-            Cancel
+            {t('Cancel')}
           </button>
         </div>
       </form>

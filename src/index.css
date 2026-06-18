@@ -24,3 +24,46 @@ body {
 button { cursor: pointer; font-family: inherit; }
 input, textarea, select { font-family: inherit; font-size: 1rem; }
 a { text-decoration: none; }
+
+/* Responsive 2-column form grid — stacks on mobile */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Prevent iOS input zoom (needs 16px minimum) */
+  input, textarea, select {
+    font-size: 16px;
+  }
+
+  /* Stack all 2-column form rows */
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Tighten page padding */
+  main {
+    padding: 0.75rem !important;
+    padding-bottom: 5rem !important;
+  }
+
+  /* Larger tap targets for primary actions */
+  .btn-primary, .btn-secondary {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  /* Tables scroll horizontally instead of overflowing */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Cards get slightly less padding on mobile */
+  .card-sm {
+    padding: 0.75rem;
+  }
+}

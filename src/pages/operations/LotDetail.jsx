@@ -8,13 +8,7 @@ import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { formatDate, formatDateTime } from '../../utils/format'
 import { card, badge, btn, input, label } from '../../styles/common'
-
-const ADJ_TYPES = [
-  { value: 'add', label: 'Add Stock', color: '#16a34a' },
-  { value: 'remove', label: 'Remove', color: '#dc2626' },
-  { value: 'waste', label: 'Waste', color: '#d97706' },
-  { value: 'correct', label: 'Correct Count', color: '#1d4ed8' },
-]
+import { useTranslation } from 'react-i18next'
 
 const STATUS_COLORS = { available: '#16a34a', hold: '#d97706', used: '#9ca3af', recalled: '#dc2626' }
 const STATUS_TRANSITIONS = {
@@ -27,6 +21,7 @@ const STATUS_TRANSITIONS = {
 export default function LotDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { currentUser } = useAuth()
   const [lot, setLot] = useState(null)
   const [usageRecords, setUsageRecords] = useState([])
@@ -37,6 +32,13 @@ export default function LotDetail() {
   const [adjForm, setAdjForm] = useState({ type: 'add', quantity: '', reason: '', notes: '' })
   const [adjusting, setAdjusting] = useState(false)
   const [changingStatus, setChangingStatus] = useState(false)
+
+  const ADJ_TYPES = [
+    { value: 'add', label: t('Add Stock'), color: '#16a34a' },
+    { value: 'remove', label: t('Remove'), color: '#dc2626' },
+    { value: 'waste', label: t('Waste'), color: '#d97706' },
+    { value: 'correct', label: t('Correct Count'), color: '#1d4ed8' },
+  ]
 
   async function load() {
     const [lotSnap, usageSnap, adjSnap] = await Promise.all([
@@ -108,15 +110,15 @@ export default function LotDetail() {
     setChangingStatus(false)
   }
 
-  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>Loading…</p>
-  if (!lot) return <p style={{ color: '#dc2626', padding: '1rem' }}>Lot not found.</p>
+  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>{t('Loading…')}</p>
+  if (!lot) return <p style={{ color: '#dc2626', padding: '1rem' }}>{t('Lot not found.')}</p>
 
   const pct = lot.originalQuantity > 0 ? Math.round((lot.currentQuantity / lot.originalQuantity) * 100) : 0
   const transitions = STATUS_TRANSITIONS[lot.status] || []
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate(-1)}>← Back</button>
+      <button style={backBtn} onClick={() => navigate(-1)}>{t('← Back')}</button>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem', gap: '0.5rem' }}>
         <div>
@@ -133,7 +135,7 @@ export default function LotDetail() {
             {lot.currentQuantity?.toLocaleString()} {lot.unit}
           </span>
           <span style={{ fontSize: '0.85rem', color: '#9ca3af', alignSelf: 'flex-end' }}>
-            {pct}% of {lot.originalQuantity?.toLocaleString()} received
+            {pct}% {t('of')} {lot.originalQuantity?.toLocaleString()} {t('received')}
           </span>
         </div>
         <div style={{ height: 8, background: '#f3f4f6', borderRadius: 4, overflow: 'hidden' }}>
@@ -145,48 +147,48 @@ export default function LotDetail() {
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         {lot.status !== 'recalled' && lot.status !== 'used' && (
           <button style={btn.primary} onClick={() => setShowAdjForm(!showAdjForm)}>
-            {showAdjForm ? 'Cancel' : 'Adjust Inventory'}
+            {showAdjForm ? t('Cancel') : t('Adjust Inventory')}
           </button>
         )}
         {transitions.map(s => (
           <button key={s} style={btn.secondary} onClick={() => changeStatus(s)} disabled={changingStatus}>
-            {s === 'hold' ? '⚠ Place on Hold' : '✓ Release from Hold'}
+            {s === 'hold' ? t('⚠ Place on Hold') : t('✓ Release from Hold')}
           </button>
         ))}
         <button style={{ ...btn.secondary, color: '#1d4ed8' }} onClick={() => navigate(`/operations/recall?lotId=${id}`)}>
-          Recall Trace
+          {t('Recall Trace')}
         </button>
       </div>
 
       {/* Adjustment Form */}
       {showAdjForm && (
         <form onSubmit={submitAdjustment} style={{ ...card, background: '#fffbeb', borderLeft: '4px solid #f59e0b', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#92400e', marginBottom: '0.75rem' }}>Adjust Inventory</h3>
+          <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#92400e', marginBottom: '0.75rem' }}>{t('Adjust Inventory')}</h3>
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.875rem', flexWrap: 'wrap' }}>
-            {ADJ_TYPES.map(t => (
-              <button key={t.value} type="button"
-                style={{ padding: '0.4rem 0.8rem', border: `2px solid ${adjForm.type === t.value ? t.color : '#d1d5db'}`, borderRadius: 8, background: adjForm.type === t.value ? t.color : '#fff', color: adjForm.type === t.value ? '#fff' : '#374151', fontSize: '0.85rem', cursor: 'pointer', fontWeight: adjForm.type === t.value ? 600 : 400 }}
-                onClick={() => setAdjForm(prev => ({ ...prev, type: t.value }))}>
-                {t.label}
+            {ADJ_TYPES.map(adjType => (
+              <button key={adjType.value} type="button"
+                style={{ padding: '0.4rem 0.8rem', border: `2px solid ${adjForm.type === adjType.value ? adjType.color : '#d1d5db'}`, borderRadius: 8, background: adjForm.type === adjType.value ? adjType.color : '#fff', color: adjForm.type === adjType.value ? '#fff' : '#374151', fontSize: '0.85rem', cursor: 'pointer', fontWeight: adjForm.type === adjType.value ? 600 : 400 }}
+                onClick={() => setAdjForm(prev => ({ ...prev, type: adjType.value }))}>
+                {adjType.label}
               </button>
             ))}
           </div>
           <label style={label}>
-            Quantity ({lot.unit})
-            {adjForm.type === 'correct' ? ' — set to this exact amount' : ''}
+            {t('Quantity')} ({lot.unit})
+            {adjForm.type === 'correct' ? ` — ${t('set to this exact amount')}` : ''}
           </label>
           <input style={input} type="number" min="0.01" step="any" value={adjForm.quantity} onChange={e => setAdjForm(p => ({ ...p, quantity: e.target.value }))} placeholder="0" />
-          <label style={label}>Reason *</label>
-          <input style={input} value={adjForm.reason} onChange={e => setAdjForm(p => ({ ...p, reason: e.target.value }))} placeholder="e.g. Spillage, cycle count correction…" />
-          <label style={label}>Notes</label>
-          <input style={{ ...input, marginBottom: '0.75rem' }} value={adjForm.notes} onChange={e => setAdjForm(p => ({ ...p, notes: e.target.value }))} placeholder="Optional additional detail" />
-          <button type="submit" style={btn.primary} disabled={adjusting}>{adjusting ? 'Saving…' : 'Save Adjustment'}</button>
+          <label style={label}>{t('Reason *')}</label>
+          <input style={input} value={adjForm.reason} onChange={e => setAdjForm(p => ({ ...p, reason: e.target.value }))} placeholder={t('e.g. Spillage, cycle count correction…')} />
+          <label style={label}>{t('Notes')}</label>
+          <input style={{ ...input, marginBottom: '0.75rem' }} value={adjForm.notes} onChange={e => setAdjForm(p => ({ ...p, notes: e.target.value }))} placeholder={t('Optional additional detail')} />
+          <button type="submit" style={btn.primary} disabled={adjusting}>{adjusting ? t('Saving…') : t('Save Adjustment')}</button>
         </form>
       )}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid #e5e7eb', marginBottom: '1rem' }}>
-        {[['details', 'Details'], ['usage', `Usage (${usageRecords.length})`], ['adjustments', `Adjustments (${adjustments.length})`]].map(([key, lbl]) => (
+        {[['details', t('Details')], ['usage', `${t('Usage')} (${usageRecords.length})`], ['adjustments', `${t('Adjustments')} (${adjustments.length})`]].map(([key, lbl]) => (
           <button key={key}
             style={{ ...tabBtn, borderBottom: tab === key ? '2px solid #1d4ed8' : '2px solid transparent', color: tab === key ? '#1d4ed8' : '#6b7280', marginBottom: '-2px' }}
             onClick={() => setTab(key)}>
@@ -197,12 +199,12 @@ export default function LotDetail() {
 
       {tab === 'details' && (
         <div style={card}>
-          {lot.supplierLotNumber && <Row label="Supplier Lot #" value={lot.supplierLotNumber} />}
-          {lot.supplier && <Row label="Supplier" value={lot.supplier} />}
-          <Row label="Received Date" value={formatDate(lot.receivedDate)} />
-          <Row label="Received By" value={lot.receivedBy?.displayName || lot.receivedBy?.email || '—'} />
-          <Row label="Storage Location" value={lot.palletNumber ? `${lot.storageLocation} · Pallet ${lot.palletNumber}` : (lot.storageLocation || '—')} />
-          {lot.notes && <Row label="Notes" value={lot.notes} />}
+          {lot.supplierLotNumber && <Row label={t('Supplier Lot #')} value={lot.supplierLotNumber} />}
+          {lot.supplier && <Row label={t('Supplier')} value={lot.supplier} />}
+          <Row label={t('Received Date')} value={formatDate(lot.receivedDate)} />
+          <Row label={t('Received By')} value={lot.receivedBy?.displayName || lot.receivedBy?.email || '—'} />
+          <Row label={t('Storage Location')} value={lot.palletNumber ? `${lot.storageLocation} · Pallet ${lot.palletNumber}` : (lot.storageLocation || '—')} />
+          {lot.notes && <Row label={t('Notes')} value={lot.notes} />}
           {lot.photoUrl && (
             <div style={{ paddingTop: '0.75rem' }}>
               <a href={lot.photoUrl} target="_blank" rel="noopener noreferrer">
@@ -215,7 +217,7 @@ export default function LotDetail() {
 
       {tab === 'usage' && (
         <div>
-          {usageRecords.length === 0 && <p style={muted}>This lot has not been used in production.</p>}
+          {usageRecords.length === 0 && <p style={muted}>{t('This lot has not been used in production.')}</p>}
           {usageRecords.map(u => (
             <div key={u.id} style={{ ...card, cursor: 'pointer' }} onClick={() => navigate(`/operations/batches/${u.batchId}`)}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -235,7 +237,7 @@ export default function LotDetail() {
 
       {tab === 'adjustments' && (
         <div>
-          {adjustments.length === 0 && <p style={muted}>No adjustments recorded.</p>}
+          {adjustments.length === 0 && <p style={muted}>{t('No adjustments recorded.')}</p>}
           {adjustments.map(a => (
             <div key={a.id} style={card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>

@@ -7,6 +7,7 @@ import {
 } from 'firebase/auth'
 import { useNavigate } from 'react-router-dom'
 import { auth } from '../firebase/config'
+import { useTranslation } from 'react-i18next'
 
 const ACTION_CODE_SETTINGS = {
   url: 'https://playa-f559d.web.app/login',
@@ -14,6 +15,7 @@ const ACTION_CODE_SETTINGS = {
 }
 
 export default function Login() {
+  const { t } = useTranslation()
   const [mode, setMode] = useState('password') // 'password' | 'link'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -46,7 +48,7 @@ export default function Login() {
       window.localStorage.removeItem('emailForSignIn')
       navigate('/dashboard')
     } catch (err) {
-      setError('Sign-in link is invalid or has expired. Please request a new one.')
+      setError(t('Sign-in link is invalid or has expired. Please request a new one.'))
       setCompletingSignIn(false)
       setNeedsEmailForLink(false)
     }
@@ -60,7 +62,7 @@ export default function Login() {
       await signInWithEmailAndPassword(auth, email, password)
       navigate('/dashboard')
     } catch {
-      setError('Invalid email or password.')
+      setError(t('Invalid email or password.'))
     }
     setLoading(false)
   }
@@ -79,7 +81,7 @@ export default function Login() {
       window.localStorage.setItem('emailForSignIn', email)
       setLinkSent(true)
     } catch {
-      setError('Could not send link. Check the email address and try again.')
+      setError(t('Could not send link. Check the email address and try again.'))
     }
     setLoading(false)
   }
@@ -99,8 +101,8 @@ export default function Login() {
       <div style={s.page}>
         <div style={{ ...s.card, textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔐</div>
-          <h1 style={{ ...s.title, textAlign: 'center' }}>Signing you in…</h1>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>One moment please.</p>
+          <h1 style={{ ...s.title, textAlign: 'center' }}>{t('Signing you in…')}</h1>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>{t('One moment please.')}</p>
         </div>
       </div>
     )
@@ -112,21 +114,21 @@ export default function Login() {
       <div style={s.page}>
         <div style={s.card}>
           <div style={{ fontSize: '2rem', marginBottom: '0.5rem', textAlign: 'center' }}>✉️</div>
-          <h1 style={{ ...s.title, textAlign: 'center' }}>Check your email</h1>
+          <h1 style={{ ...s.title, textAlign: 'center' }}>{t('Check your email')}</h1>
           <p style={{ color: '#374151', fontSize: '0.9rem', marginBottom: '0.5rem', textAlign: 'center' }}>
-            We sent a sign-in link to
+            {t('We sent a sign-in link to')}
           </p>
           <p style={{ fontWeight: 700, color: '#111827', textAlign: 'center', marginBottom: '1.25rem', wordBreak: 'break-all' }}>
             {email}
           </p>
           <p style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '1.5rem', textAlign: 'center', lineHeight: 1.5 }}>
-            Click the link in the email to sign in. You can close this tab.
+            {t('Click the link in the email to sign in. You can close this tab.')}
           </p>
           <button
             style={{ ...s.button, background: '#fff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}
             onClick={() => { setLinkSent(false); setEmail('') }}
           >
-            Use a different email
+            {t('Use a different email')}
           </button>
         </div>
       </div>
@@ -137,8 +139,8 @@ export default function Login() {
   return (
     <div style={s.page}>
       <div style={s.card}>
-        <h1 style={s.title}>Playa Management</h1>
-        <p style={s.subtitle}>CGMP Compliance — Sign in</p>
+        <h1 style={s.title}>{t('Playa Management')}</h1>
+        <p style={s.subtitle}>{t('CGMP Compliance — Sign in')}</p>
 
         {/* Mode toggle */}
         <div style={s.toggle}>
@@ -146,13 +148,13 @@ export default function Login() {
             style={{ ...s.toggleBtn, ...(mode === 'password' ? s.toggleActive : {}) }}
             onClick={() => switchMode('password')}
           >
-            Password
+            {t('Password')}
           </button>
           <button
             style={{ ...s.toggleBtn, ...(mode === 'link' ? s.toggleActive : {}) }}
             onClick={() => switchMode('link')}
           >
-            Email link
+            {t('Email link')}
           </button>
         </div>
 
@@ -163,7 +165,7 @@ export default function Login() {
           <form onSubmit={handlePasswordSubmit}>
             <input
               type="email"
-              placeholder="Email"
+              placeholder={t('Email')}
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
@@ -171,14 +173,14 @@ export default function Login() {
             />
             <input
               type="password"
-              placeholder="Password"
+              placeholder={t('Password')}
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
               style={s.input}
             />
             <button type="submit" disabled={loading} style={s.button}>
-              {loading ? 'Signing in…' : 'Sign In'}
+              {loading ? t('Signing in…') : t('Sign In')}
             </button>
           </form>
         )}
@@ -188,12 +190,12 @@ export default function Login() {
           <form onSubmit={handleLinkSubmit}>
             {needsEmailForLink && (
               <p style={{ fontSize: '0.85rem', color: '#374151', marginBottom: '0.75rem', lineHeight: 1.5 }}>
-                Enter your email address to complete sign-in.
+                {t('Enter your email address to complete sign-in.')}
               </p>
             )}
             <input
               type="email"
-              placeholder="Email"
+              placeholder={t('Email')}
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
@@ -201,11 +203,11 @@ export default function Login() {
               style={s.input}
             />
             <button type="submit" disabled={loading} style={s.button}>
-              {loading ? 'Sending…' : needsEmailForLink ? 'Complete Sign In' : 'Send sign-in link'}
+              {loading ? t('Sending…') : needsEmailForLink ? t('Complete Sign In') : t('Send sign-in link')}
             </button>
             {!needsEmailForLink && (
               <p style={{ color: '#9ca3af', fontSize: '0.8rem', textAlign: 'center', marginTop: '0.75rem' }}>
-                We'll email you a one-tap link — no password needed.
+                {t("We'll email you a one-tap link — no password needed.")}
               </p>
             )}
           </form>

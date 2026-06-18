@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { card, badge, btn } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 export default function CustomerList() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('active')
@@ -23,8 +25,8 @@ export default function CustomerList() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={pageTitle}>Customers</h1>
-        <button style={btn.primary} onClick={() => navigate('/operations/customers/new')}>+ New Customer</button>
+        <h1 style={pageTitle}>{t('Customers')}</h1>
+        <button style={btn.primary} onClick={() => navigate('/operations/customers/new')}>{t('+ New Customer')}</button>
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -34,15 +36,15 @@ export default function CustomerList() {
             style={{ ...filterBtn, background: filter === f ? '#1d4ed8' : '#fff', color: filter === f ? '#fff' : '#374151' }}
             onClick={() => setFilter(f)}
           >
-            {f === 'active' ? 'Active' : 'All'}
+            {f === 'active' ? t('Active') : t('All')}
           </button>
         ))}
       </div>
 
-      {loading && <p style={muted}>Loading…</p>}
+      {loading && <p style={muted}>{t('Loading…')}</p>}
 
       {!loading && filtered.length === 0 && (
-        <p style={muted}>No customers found.</p>
+        <p style={muted}>{t('No customers found.')}</p>
       )}
 
       {filtered.map(c => (

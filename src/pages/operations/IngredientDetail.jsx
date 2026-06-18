@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import { doc, getDoc, deleteDoc, collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../firebase/config'
+import { useAuth } from '../../contexts/AuthContext'
 import { formatDate, formatDateTime } from '../../utils/format'
 import { card, badge, btn } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 const STATUS_COLORS = { available: '#16a34a', hold: '#d97706', used: '#9ca3af', recalled: '#dc2626' }
 
 export default function IngredientDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t } = useTranslation()
+  const { isAdmin } = useAuth()
   const [ingredient, setIngredient] = useState(null)
   const [lots, setLots] = useState([])
   const [loading, setLoading] = useState(true)
   const [lotFilter, setLotFilter] = useState('available')
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -31,8 +36,15 @@ export default function IngredientDetail() {
     load()
   }, [id])
 
-  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>Loading…</p>
-  if (!ingredient) return <p style={{ color: '#dc2626', padding: '1rem' }}>Ingredient not found.</p>
+  async function handleDelete() {
+    if (!window.confirm(`Delete "${ingredient.name}"? This cannot be undone.`)) return
+    setDeleting(true)
+    await deleteDoc(doc(db, 'ingredients', id))
+    navigate('/operations/ingredients')
+  }
+
+  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>{t('Loading…')}</p>
+  if (!ingredient) return <p style={{ color: '#dc2626', padding: '1rem' }}>{t('Ingredient not found.')}</p>
 
   const availableLots = lots.filter(l => l.status === 'available')
   const totalAvailable = availableLots.reduce((sum, l) => sum + (l.currentQuantity || 0), 0)
@@ -40,7 +52,7 @@ export default function IngredientDetail() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/operations/ingredients')}>← Ingredients</button>
+      <button style={backBtn} onClick={() => navigate('/operations/ingredients')}>{t('← Ingredients')}</button>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', gap: '0.5rem' }}>
         <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#111827' }}>{ingredient.name}</h1>
@@ -48,43 +60,48 @@ export default function IngredientDetail() {
       </div>
 
       <div style={card}>
-        <Row label="Category" value={ingredient.category} />
-        {ingredient.supplier && <Row label="Supplier" value={ingredient.supplier} />}
-        <Row label="Unit" value={ingredient.unit} />
+        <Row label={t('Category')} value={ingredient.category} />
+        {ingredient.supplier && <Row label={t('Supplier')} value={ingredient.supplier} />}
+        <Row label={t('Unit')} value={ingredient.unit} />
         {ingredient.allergenFlag && (
-          <Row label="Allergens" value={ingredient.allergens?.join(', ') || 'Yes'} />
+          <Row label={t('Allergens')} value={ingredient.allergens?.join(', ') || 'Yes'} />
         )}
-        {ingredient.notes && <Row label="Notes" value={ingredient.notes} />}
+        {ingredient.notes && <Row label={t('Notes')} value={ingredient.notes} />}
       </div>
 
       {/* Stock Summary */}
       <div style={{ ...card, background: totalAvailable > 0 ? '#f0fdf4' : '#fef2f2', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-        <Stat label="Available" value={`${totalAvailable.toLocaleString()} ${ingredient.unit}`} color={totalAvailable > 0 ? '#15803d' : '#dc2626'} />
-        <Stat label="Available Lots" value={availableLots.length} />
-        <Stat label="Total Lots" value={lots.length} />
+        <Stat label={t('Available')} value={`${totalAvailable.toLocaleString()} ${ingredient.unit}`} color={totalAvailable > 0 ? '#15803d' : '#dc2626'} />
+        <Stat label={t('Available Lots')} value={availableLots.length} />
+        <Stat label={t('Total Lots')} value={lots.length} />
       </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <button style={btn.primary} onClick={() => navigate(`/operations/receive?ingredientId=${id}`)}>
-          Receive Stock
+          {t('Receive Stock')}
         </button>
         <button style={btn.secondary} onClick={() => navigate(`/operations/ingredients/${id}/edit`)}>
-          Edit
+          {t('Edit')}
         </button>
+        {isAdmin && (
+          <button style={{ ...btn.danger, fontSize: '0.9rem', padding: '0.65rem 1rem' }} onClick={handleDelete} disabled={deleting}>
+            {deleting ? t('Deleting…') : t('Delete')}
+          </button>
+        )}
       </div>
 
-      <h2 style={sectionHead}>Lots</h2>
+      <h2 style={sectionHead}>{t('Lots')}</h2>
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
         {['available', 'hold', 'used', 'recalled', 'all'].map(f => (
           <button key={f}
             style={{ ...filterBtn, background: lotFilter === f ? '#1d4ed8' : '#fff', color: lotFilter === f ? '#fff' : '#374151' }}
             onClick={() => setLotFilter(f)}>
-            {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+            {f === 'all' ? t('All') : f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
       </div>
 
-      {filteredLots.length === 0 && <p style={muted}>No lots found.</p>}
+      {filteredLots.length === 0 && <p style={muted}>{t('No lots found.')}</p>}
 
       {filteredLots.map(lot => (
         <div key={lot.id} style={{ ...card, cursor: 'pointer', borderLeft: `4px solid ${STATUS_COLORS[lot.status] || '#d1d5db'}` }}
@@ -92,8 +109,8 @@ export default function IngredientDetail() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
             <div>
               <div style={{ fontWeight: 600, color: '#374151', fontSize: '0.85rem' }}>{lot.internalLotNumber}</div>
-              {lot.supplierLotNumber && <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>Supplier: {lot.supplierLotNumber}</div>}
-              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Received {formatDate(lot.receivedDate)}</div>
+              {lot.supplierLotNumber && <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{t('Supplier')}: {lot.supplierLotNumber}</div>}
+              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>{t('Received')} {formatDate(lot.receivedDate)}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontWeight: 700, color: STATUS_COLORS[lot.status] || '#374151' }}>

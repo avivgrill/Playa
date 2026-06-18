@@ -4,11 +4,13 @@ import { doc, getDoc, addDoc, updateDoc, collection, serverTimestamp, Timestamp,
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { card, btn, input, label } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 export default function CustomerForm() {
   const { id } = useParams()
   const isEdit = id && id !== 'new'
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { currentUser } = useAuth()
 
   const [form, setForm] = useState({
@@ -75,52 +77,52 @@ export default function CustomerForm() {
     }
   }
 
-  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>Loading…</p>
+  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>{t('Loading…')}</p>
 
   return (
     <div>
       <button style={backBtn} onClick={() => navigate(isEdit ? `/operations/customers/${id}` : '/operations/customers')}>
-        ← {isEdit ? 'Back to Customer' : 'Back to Customers'}
+        {isEdit ? t('← Back to Customer') : t('← Back to Customers')}
       </button>
-      <h1 style={pageTitle}>{isEdit ? 'Edit Customer' : 'New Customer'}</h1>
+      <h1 style={pageTitle}>{isEdit ? t('Edit Customer') : t('New Customer')}</h1>
 
       <form onSubmit={handleSubmit} style={card}>
-        <label style={label}>Customer Name *</label>
-        <input style={input} value={form.customerName} onChange={set('customerName')} placeholder="e.g. Sweet Treats Co." />
+        <label style={label}>{t('Customer Name *')}</label>
+        <input style={input} value={form.customerName} onChange={set('customerName')} placeholder={t('e.g. Sweet Treats Co.')} />
 
-        <label style={label}>Contact Name</label>
-        <input style={input} value={form.contactName} onChange={set('contactName')} placeholder="e.g. Jane Smith" />
+        <label style={label}>{t('Contact Name')}</label>
+        <input style={input} value={form.contactName} onChange={set('contactName')} placeholder={t('e.g. Jane Smith')} />
 
-        <label style={label}>Email</label>
+        <label style={label}>{t('Email')}</label>
         <input style={input} type="email" value={form.email} onChange={set('email')} placeholder="contact@example.com" />
 
-        <label style={label}>Phone</label>
+        <label style={label}>{t('Phone')}</label>
         <input style={input} type="tel" value={form.phone} onChange={set('phone')} placeholder="(555) 000-0000" />
 
-        <label style={label}>Status</label>
+        <label style={label}>{t('Status')}</label>
         <select style={input} value={form.status} onChange={set('status')}>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">{t('Active')}</option>
+          <option value="inactive">{t('Inactive')}</option>
         </select>
 
-        <label style={label}>Notes</label>
+        <label style={label}>{t('Notes')}</label>
         <textarea
           style={{ ...input, minHeight: 80, resize: 'vertical' }}
           value={form.notes}
           onChange={set('notes')}
-          placeholder="Any notes about this customer…"
+          placeholder={t('Any notes about this customer…')}
         />
 
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
           <button type="submit" style={btn.primary} disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Customer'}
+            {saving ? t('Saving…') : isEdit ? t('Save Changes') : t('Add Customer')}
           </button>
           <button
             type="button"
             style={btn.secondary}
             onClick={() => navigate(isEdit ? `/operations/customers/${id}` : '/operations/customers')}
           >
-            Cancel
+            {t('Cancel')}
           </button>
         </div>
       </form>

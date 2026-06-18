@@ -9,6 +9,7 @@ import { db, storage } from '../firebase/config'
 import { useAuth } from '../contexts/AuthContext'
 import { recentWeeks, weekLabel, weekStartStr, punchHours, formatHours } from '../utils/timecard'
 import { card, btn } from '../styles/common'
+import { useTranslation } from 'react-i18next'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -47,6 +48,7 @@ function initPunches() {
 export default function Timecard() {
   const { currentUser } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const weeks = recentWeeks(8)
   const [weekIdx, setWeekIdx] = useState(0)
@@ -143,9 +145,9 @@ export default function Timecard() {
       <div>
         <div style={{ ...card, textAlign: 'center', padding: '2rem', background: '#f0fdf4', borderLeft: '4px solid #16a34a' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>✓</div>
-          <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#15803d', marginBottom: '0.25rem' }}>Timecard submitted!</div>
+          <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#15803d', marginBottom: '0.25rem' }}>{t('Timecard submitted!')}</div>
           <div style={{ color: '#6b7280', marginBottom: '1.5rem' }}>{weekLabel(selectedWeek)} · {formatHours(total)}</div>
-          <button style={btn.secondary} onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+          <button style={btn.secondary} onClick={() => navigate('/dashboard')}>{t('Back to Dashboard')}</button>
         </div>
       </div>
     )
@@ -153,18 +155,18 @@ export default function Timecard() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/dashboard')}>← Dashboard</button>
-      <h1 style={pageTitle}>My Timecard</h1>
+      <button style={backBtn} onClick={() => navigate('/dashboard')}>{t('← Dashboard')}</button>
+      <h1 style={pageTitle}>{t('My Timecard')}</h1>
 
       <div style={{ ...card, marginBottom: '0.75rem' }}>
-        <label style={lbl}>Select Week</label>
+        <label style={lbl}>{t('Select Week')}</label>
         <select style={sel} value={weekIdx} onChange={e => setWeekIdx(parseInt(e.target.value))}>
           {weeks.map((w, i) => <option key={i} value={i}>{weekLabel(w)}</option>)}
         </select>
       </div>
 
       {checkingExisting ? (
-        <p style={muted}>Loading…</p>
+        <p style={muted}>{t('Loading…')}</p>
       ) : existing ? (
         <ExistingCard existing={existing} />
       ) : (
@@ -179,31 +181,31 @@ export default function Timecard() {
           </div>
 
           <div style={card}>
-            <label style={lbl}>Notes <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+            <label style={lbl}>{t('Notes')} <span style={{ color: '#9ca3af', fontWeight: 400 }}>({t('optional')})</span></label>
             <textarea style={textArea} value={notes} onChange={e => setNotes(e.target.value)}
-              placeholder="Any notes about this week's hours…" />
+              placeholder={t("Any notes about this week's hours…")} />
           </div>
 
           <div style={card}>
-            <label style={lbl}>📷 Photo of time card <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
+            <label style={lbl}>{t('📷 Photo of time card')} <span style={{ color: '#9ca3af', fontWeight: 400 }}>({t('optional')})</span></label>
             {photo ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <img src={photo.url} alt="Time card" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }} />
                 <div>
-                  <div style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 500 }}>Photo attached</div>
-                  <button type="button" style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }} onClick={() => setPhoto(null)}>Remove</button>
+                  <div style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 500 }}>{t('Photo attached')}</div>
+                  <button type="button" style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }} onClick={() => setPhoto(null)}>{t('Remove')}</button>
                 </div>
               </div>
             ) : (
               <label style={photoLbl}>
-                {uploading ? 'Uploading…' : '📷 Add Photo'}
+                {uploading ? t('Uploading…') : t('📷 Add Photo')}
                 <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handlePhoto} disabled={uploading} />
               </label>
             )}
           </div>
 
           <button type="submit" style={{ ...btn.primary, width: '100%', padding: '1rem', fontSize: '1.05rem' }} disabled={saving || uploading}>
-            {saving ? 'Submitting…' : 'Submit Timecard'}
+            {saving ? t('Submitting…') : t('Submit Timecard')}
           </button>
         </form>
       )}
@@ -213,6 +215,7 @@ export default function Timecard() {
 
 // ── Punch table (shared by entry form and read-only view) ─────────────────────
 function PunchTable({ punches, selectedWeek, onSlotChange, total, readOnly = false }) {
+  const { t } = useTranslation()
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
       <colgroup>
@@ -292,7 +295,7 @@ function PunchTable({ punches, selectedWeek, onSlotChange, total, readOnly = fal
       <tfoot>
         <tr>
           <td colSpan={8} style={{ borderTop: '2px solid #e5e7eb', padding: '0.5rem 0.1rem 0', textAlign: 'right', fontWeight: 700, fontSize: '0.9rem', color: total > 0 ? '#111827' : '#d1d5db' }}>
-            Total: {total > 0 ? formatHours(total) : '—'}
+            {t('Total')}: {total > 0 ? formatHours(total) : '—'}
           </td>
         </tr>
       </tfoot>
@@ -302,6 +305,7 @@ function PunchTable({ punches, selectedWeek, onSlotChange, total, readOnly = fal
 
 // ── Already-submitted read-only view ─────────────────────────────────────────
 function ExistingCard({ existing }) {
+  const { t } = useTranslation()
   // Reconstruct 7×6 grid from stored punch data
   const grid = DAYS.map(() => Array(6).fill(''))
   existing.punches.forEach(p => {
@@ -319,7 +323,7 @@ function ExistingCard({ existing }) {
   return (
     <div style={card}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-        <h2 style={sectionTitle}>Submitted</h2>
+        <h2 style={sectionTitle}>{t('Submitted')}</h2>
         <span style={{ fontWeight: 700, fontSize: '1.2rem', color: '#1d4ed8' }}>{formatHours(existing.totalHours)}</span>
       </div>
       <PunchTable

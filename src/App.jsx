@@ -25,14 +25,23 @@ import ProductionLogDetail from './pages/operations/ProductionLogDetail'
 import CustomerList from './pages/operations/CustomerList'
 import CustomerForm from './pages/operations/CustomerForm'
 import CustomerDetail from './pages/operations/CustomerDetail'
+import ClientOrderList from './pages/operations/ClientOrderList'
+import ClientOrderForm from './pages/operations/ClientOrderForm'
+import ClientOrderDetail from './pages/operations/ClientOrderDetail'
+import FinishedGoodsLotList from './pages/operations/FinishedGoodsLotList'
+import FinishedGoodsLotDetail from './pages/operations/FinishedGoodsLotDetail'
 import IngredientList from './pages/operations/IngredientList'
 import IngredientForm from './pages/operations/IngredientForm'
 import IngredientDetail from './pages/operations/IngredientDetail'
 import ReceiveInventory from './pages/operations/ReceiveInventory'
+import InventoryTable from './pages/operations/InventoryTable'
 import LotList from './pages/operations/LotList'
 import LotDetail from './pages/operations/LotDetail'
 import RecallTrace from './pages/operations/RecallTrace'
 import Timecard from './pages/Timecard'
+import ComplianceLanding from './pages/ComplianceLanding'
+import ProductionLanding from './pages/ProductionLanding'
+import InventoryLanding from './pages/InventoryLanding'
 import UserRoles from './pages/admin/UserRoles'
 import TimecardAdmin from './pages/admin/TimecardAdmin'
 
@@ -52,7 +61,7 @@ export default function App() {
           >
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="inspections" element={<InspectionHistory />} />
+            <Route path="inspections" element={<Navigate to="/records" replace />} />
             <Route path="inspections/new/:type" element={<StartInspection />} />
             <Route path="inspections/:id" element={<InspectionDetail />} />
             <Route path="cleaning" element={<CleaningHistory />} />
@@ -76,15 +85,25 @@ export default function App() {
             <Route path="operations/customers/new" element={<CustomerForm />} />
             <Route path="operations/customers/:id" element={<CustomerDetail />} />
             <Route path="operations/customers/:id/edit" element={<CustomerForm />} />
+            <Route path="operations/client-orders" element={<ClientOrderList />} />
+            <Route path="operations/client-orders/new" element={<ClientOrderForm />} />
+            <Route path="operations/client-orders/:id" element={<ClientOrderDetail />} />
+            <Route path="operations/fg-lots" element={<FinishedGoodsLotList />} />
+            <Route path="operations/fg-lots/:id" element={<FinishedGoodsLotDetail />} />
             {/* Operations — inventory */}
             <Route path="operations/ingredients" element={<IngredientList />} />
             <Route path="operations/ingredients/new" element={<IngredientForm />} />
             <Route path="operations/ingredients/:id" element={<IngredientDetail />} />
             <Route path="operations/ingredients/:id/edit" element={<IngredientForm />} />
             <Route path="operations/receive" element={<ReceiveInventory />} />
+            <Route path="operations/inventory" element={<InventoryTable />} />
             <Route path="operations/lots" element={<LotList />} />
             <Route path="operations/lots/:id" element={<LotDetail />} />
             <Route path="operations/recall" element={<RecallTrace />} />
+            {/* Landing pages */}
+            <Route path="compliance" element={<ComplianceLanding />} />
+            <Route path="production" element={<ProductionLanding />} />
+            <Route path="inventory" element={<InventoryLanding />} />
             {/* Timecard */}
             <Route path="timecard" element={<Timecard />} />
             {/* Admin */}

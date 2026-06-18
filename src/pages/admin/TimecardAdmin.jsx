@@ -5,8 +5,10 @@ import { db } from '../../firebase/config'
 import { card } from '../../styles/common'
 import { formatHours, punchHours } from '../../utils/timecard'
 import { formatDateTime } from '../../utils/format'
+import { useTranslation } from 'react-i18next'
 
 export default function TimecardAdmin() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [timecards, setTimecards] = useState([])
   const [loading, setLoading] = useState(true)
@@ -36,21 +38,21 @@ export default function TimecardAdmin() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/dashboard')}>← Dashboard</button>
+      <button style={backBtn} onClick={() => navigate('/dashboard')}>{t('← Dashboard')}</button>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={pageTitle}>All Timecards</h1>
+        <h1 style={pageTitle}>{t('All Timecards')}</h1>
         <select
           style={{ border: '1px solid #d1d5db', borderRadius: 6, padding: '0.4rem 0.6rem', fontSize: '0.875rem', background: '#fff' }}
           value={filterWeek} onChange={e => setFilterWeek(e.target.value)}>
-          <option value="all">All weeks</option>
+          <option value="all">{t('All weeks')}</option>
           {weeks.map(w => <option key={w} value={w}>{w}</option>)}
         </select>
       </div>
 
       {loading ? (
-        <p style={muted}>Loading…</p>
+        <p style={muted}>{t('Loading…')}</p>
       ) : filtered.length === 0 ? (
-        <p style={muted}>No timecards submitted yet.</p>
+        <p style={muted}>{t('No timecards submitted yet.')}</p>
       ) : (
         filtered.map(tc => (
           <div key={tc.id} style={card}>
@@ -58,7 +60,7 @@ export default function TimecardAdmin() {
               <div>
                 <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.95rem' }}>{tc.userName || tc.userEmail}</div>
                 <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                  {tc.weekLabel} · submitted {formatDateTime(tc.submittedAt)}
+                  {tc.weekLabel} · {t('submitted')} {formatDateTime(tc.submittedAt)}
                 </div>
               </div>
               <span style={{ fontWeight: 700, fontSize: '1.1rem', color: '#1d4ed8' }}>{formatHours(tc.totalHours)}</span>
@@ -70,7 +72,7 @@ export default function TimecardAdmin() {
             {tc.photoUrl && (
               <a href={tc.photoUrl} target="_blank" rel="noopener noreferrer"
                 style={{ display: 'inline-block', marginTop: '0.5rem', fontSize: '0.8rem', color: '#1d4ed8' }}>
-                View time card photo →
+                {t('View time card photo →')}
               </a>
             )}
           </div>
@@ -90,6 +92,7 @@ function calcSlotHours(slots) {
 }
 
 function PunchSummary({ punches }) {
+  const { t } = useTranslation()
   return (
     <div style={{ marginBottom: '0.5rem' }}>
       {DAYS.filter(day => punches.some(p => p.day === day)).map(day => {

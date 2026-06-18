@@ -5,10 +5,13 @@ import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { formatDateTime } from '../../utils/format'
 import { card, badge, btn } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
+import TranslateButton from '../../components/TranslateButton'
 
 export default function SOPDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { currentUser } = useAuth()
   const [sop, setSop] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -34,12 +37,12 @@ export default function SOPDetail() {
     setToggling(false)
   }
 
-  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>Loading…</p>
-  if (!sop) return <p style={{ color: '#dc2626', padding: '1rem' }}>SOP not found.</p>
+  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>{t('Loading…')}</p>
+  if (!sop) return <p style={{ color: '#dc2626', padding: '1rem' }}>{t('SOP not found.')}</p>
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/operations/sops')}>← SOPs</button>
+      <button style={backBtn} onClick={() => navigate('/operations/sops')}>{t('← SOPs')}</button>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', gap: '0.5rem' }}>
         <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#111827' }}>{sop.name}</h1>
@@ -47,39 +50,41 @@ export default function SOPDetail() {
       </div>
 
       <div style={card}>
-        <Row label="Product Type" value={sop.productType} />
-        <Row label="Status" value={sop.status} />
-        <Row label="Created by" value={sop.createdBy?.displayName || sop.createdBy?.email} />
-        <Row label="Created" value={formatDateTime(sop.createdAt)} />
-        <Row label="Last updated" value={formatDateTime(sop.updatedAt)} />
+        <Row label={t('Product Type')} value={sop.productType} />
+        <Row label={t('Status')} value={sop.status} />
+        <Row label={t('Created by')} value={sop.createdBy?.displayName || sop.createdBy?.email} />
+        <Row label={t('Created')} value={formatDateTime(sop.createdAt)} />
+        <Row label={t('Last updated')} value={formatDateTime(sop.updatedAt)} />
       </div>
 
       {sop.instructions && (
         <div style={card}>
-          <h2 style={sectionHead}>Instructions</h2>
+          <h2 style={sectionHead}>{t('Instructions')}</h2>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.9rem', color: '#374151', margin: 0, fontFamily: 'inherit', lineHeight: 1.6 }}>
             {sop.instructions}
           </pre>
+          <TranslateButton text={sop.instructions} style={{ marginTop: '0.75rem' }} />
         </div>
       )}
 
       {sop.notes && (
         <div style={card}>
-          <h2 style={sectionHead}>Notes</h2>
+          <h2 style={sectionHead}>{t('Notes')}</h2>
           <p style={{ fontSize: '0.9rem', color: '#374151', margin: 0, lineHeight: 1.6 }}>{sop.notes}</p>
+          <TranslateButton text={sop.notes} style={{ marginTop: '0.75rem' }} />
         </div>
       )}
 
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
         <button style={btn.primary} onClick={() => navigate(`/operations/sops/${id}/edit`)}>
-          Edit SOP
+          {t('Edit SOP')}
         </button>
         <button
           style={sop.status === 'active' ? btn.secondary : btn.success}
           onClick={toggleStatus}
           disabled={toggling}
         >
-          {toggling ? '…' : sop.status === 'active' ? 'Deactivate' : 'Activate'}
+          {toggling ? '…' : sop.status === 'active' ? t('Deactivate') : t('Activate')}
         </button>
       </div>
     </div>

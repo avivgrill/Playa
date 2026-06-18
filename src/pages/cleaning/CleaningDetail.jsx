@@ -5,10 +5,12 @@ import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { formatDateTime } from '../../utils/format'
 import { card, btn, badge, input, label } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 export default function CleaningDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { currentUser } = useAuth()
   const [log, setLog] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -41,54 +43,54 @@ export default function CleaningDetail() {
     setVerifying(false)
   }
 
-  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>Loading…</p>
-  if (!log) return <p style={{ color: '#dc2626', padding: '1rem' }}>Log not found.</p>
+  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>{t('Loading…')}</p>
+  if (!log) return <p style={{ color: '#dc2626', padding: '1rem' }}>{t('Cleaning Log not found.')}</p>
 
   const verified = log.verificationStatus === 'verified'
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/cleaning')}>← Cleaning Logs</button>
+      <button style={backBtn} onClick={() => navigate('/cleaning')}>{t('← Cleaning History')}</button>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem', gap: '0.5rem' }}>
         <h1 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{log.area}</h1>
-        <span style={verified ? badge.verified : badge.pending}>{verified ? 'Verified' : 'Pending Verification'}</span>
+        <span style={verified ? badge.verified : badge.pending}>{verified ? t('Verified') : t('Pending')}</span>
       </div>
 
       <div style={card}>
-        <Row label="Equipment" value={log.equipment} />
-        <Row label="Chemical" value={log.chemical} />
-        {log.concentration && <Row label="Concentration" value={log.concentration} />}
-        <Row label="Completed by" value={log.createdBy?.displayName || log.createdBy?.email} />
-        <Row label="Date / Time" value={formatDateTime(log.completedAt)} />
-        {log.notes && <Row label="Notes" value={log.notes} />}
+        <Row label={t('Equipment')} value={log.equipment} />
+        <Row label={t('Chemical')} value={log.chemical} />
+        {log.concentration && <Row label={t('Concentration')} value={log.concentration} />}
+        <Row label={t('Completed by')} value={log.createdBy?.displayName || log.createdBy?.email} />
+        <Row label={t('Date / Time')} value={formatDateTime(log.completedAt)} />
+        {log.notes && <Row label={t('Notes')} value={log.notes} />}
       </div>
 
       {log.photoUrl && (
         <div style={card}>
-          <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '0.5rem' }}>Photo</p>
+          <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '0.5rem' }}>{t('Photo')}</p>
           <img src={log.photoUrl} alt="Cleaning photo" style={{ maxWidth: '100%', maxHeight: 260, borderRadius: 8, objectFit: 'cover' }} />
         </div>
       )}
 
       {verified ? (
         <div style={{ ...card, borderLeft: '4px solid #16a34a' }}>
-          <p style={sectionHead}>Verification</p>
-          <Row label="Verified by" value={log.verification?.verifiedBy?.displayName || log.verification?.verifiedBy?.email} />
-          {log.verification?.notes && <Row label="Notes" value={log.verification.notes} />}
+          <p style={sectionHead}>{t('Verification')}</p>
+          <Row label={t('Verified by')} value={log.verification?.verifiedBy?.displayName || log.verification?.verifiedBy?.email} />
+          {log.verification?.notes && <Row label={t('Notes')} value={log.verification.notes} />}
         </div>
       ) : (
         <div style={card}>
-          <p style={sectionHead}>Supervisor Verification</p>
-          <label style={label}>Verification notes (optional)</label>
+          <p style={sectionHead}>{t('Supervisor Verification')}</p>
+          <label style={label}>{t('Verification notes (optional)')}</label>
           <textarea
             style={{ ...input, minHeight: 80, resize: 'vertical' }}
-            placeholder="Any notes or observations…"
+            placeholder={t('Any notes or observations…')}
             value={verNotes}
             onChange={e => setVerNotes(e.target.value)}
           />
           <button style={{ ...btn.success, width: '100%' }} onClick={handleVerify} disabled={verifying}>
-            {verifying ? 'Saving…' : '✓ Verify & Sign Off'}
+            {verifying ? t('Saving…') : t('✓ Verify & Sign Off')}
           </button>
         </div>
       )}

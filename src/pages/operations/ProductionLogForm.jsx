@@ -5,15 +5,12 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { card, btn, input, label } from '../../styles/common'
-
-const now = () => {
-  const d = new Date()
-  return d.toISOString().slice(0, 16)
-}
+import { useTranslation } from 'react-i18next'
 
 export default function ProductionLogForm() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { t } = useTranslation()
   const { currentUser } = useAuth()
 
   const [batches, setBatches] = useState([])
@@ -30,9 +27,10 @@ export default function ProductionLogForm() {
     sopId: '',
     sopName: '',
     operator: currentUser?.displayName || currentUser?.email || '',
-    startTime: now(),
-    endTime: '',
-    equipment: '',
+    date: new Date().toISOString().split('T')[0],
+    actualQuantity: '',
+    wasteQuantity: '',
+    unit: '',
     notes: '',
     deviations: '',
   })
@@ -50,6 +48,7 @@ export default function ProductionLogForm() {
             productName: preselect.productName,
             sopId: preselect.sopId || '',
             sopName: preselect.sopName || '',
+            unit: preselect.unit || '',
           }))
         }
       })
@@ -67,6 +66,7 @@ export default function ProductionLogForm() {
       productName: selected?.productName || '',
       sopId: selected?.sopId || '',
       sopName: selected?.sopName || '',
+      unit: selected?.unit || '',
     }))
   }
 
@@ -95,8 +95,7 @@ export default function ProductionLogForm() {
     setSaving(true)
     try {
       const userInfo = { uid: currentUser.uid, displayName: currentUser.displayName || currentUser.email, email: currentUser.email }
-      const startDt = form.startTime ? new Date(form.startTime) : new Date()
-      const endDt = form.endTime ? new Date(form.endTime) : null
+      const runDate = form.date ? new Date(form.date + 'T00:00:00') : new Date()
 
       const docRef = await addDoc(collection(db, 'productionLogs'), {
         batchId: form.batchId,
@@ -105,9 +104,10 @@ export default function ProductionLogForm() {
         sopId: form.sopId || null,
         sopName: form.sopName || null,
         operator: form.operator,
-        startTime: Timestamp.fromDate(startDt),
-        endTime: endDt ? Timestamp.fromDate(endDt) : null,
-        equipment: form.equipment,
+        date: Timestamp.fromDate(runDate),
+        actualQuantity: form.actualQuantity ? Number(form.actualQuantity) : null,
+        wasteQuantity: form.wasteQuantity ? Number(form.wasteQuantity) : null,
+        unit: form.unit || '',
         notes: form.notes,
         deviations: form.deviations,
         photoUrls: photos.map(p => p.url),
@@ -127,22 +127,22 @@ export default function ProductionLogForm() {
   if (step === 'sign') {
     return (
       <div>
-        <button style={backBtn} onClick={() => setStep('form')}>← Back to Form</button>
-        <h1 style={pageTitle}>Sign Production Log</h1>
+        <button style={backBtn} onClick={() => setStep('form')}>{t('← Back to Form')}</button>
+        <h1 style={pageTitle}>{t('Sign Production Run')}</h1>
         <div style={card}>
           <p style={{ fontSize: '0.9rem', color: '#374151', marginBottom: '1rem' }}>
-            By signing, I confirm the information in this production log is accurate and complete.
+            {t('By signing, I confirm the information in this production log is accurate and complete.')}
           </p>
-          <label style={labelStyle}>Type your full name to sign</label>
+          <label style={labelStyle}>{t('Type your full name to sign')}</label>
           <input
             style={inputStyle}
             value={sigName}
             onChange={e => setSigName(e.target.value)}
-            placeholder="Your full name"
+            placeholder={t('Your full name')}
             autoFocus
           />
           <button style={btn.success} onClick={handleSubmit} disabled={saving}>
-            {saving ? 'Submitting…' : 'Submit & Sign'}
+            {saving ? t('Submitting…') : t('Submit & Sign')}
           </button>
         </div>
       </div>
@@ -151,13 +151,13 @@ export default function ProductionLogForm() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/operations/logs')}>← Production Logs</button>
-      <h1 style={pageTitle}>New Production Log</h1>
+      <button style={backBtn} onClick={() => navigate('/operations/logs')}>{t('← Production Runs')}</button>
+      <h1 style={pageTitle}>{t('New Production Run')}</h1>
 
       <div style={card}>
-        <label style={labelStyle}>Production Batch *</label>
+        <label style={labelStyle}>{t('Work Order *')}</label>
         <select style={inputStyle} value={form.batchId} onChange={handleBatchChange}>
-          <option value="">— Select batch —</option>
+          <option value="">{t('— Select work order —')}</option>
           {batches.map(b => (
             <option key={b.id} value={b.id}>{b.batchNumber} – {b.productName}</option>
           ))}
@@ -165,44 +165,44 @@ export default function ProductionLogForm() {
 
         {form.sopName && (
           <div style={{ marginBottom: '0.875rem', padding: '0.6rem 0.875rem', background: '#f0fdf4', borderRadius: 8, fontSize: '0.875rem', color: '#15803d' }}>
-            SOP: {form.sopName}
+            {t('SOP')}: {form.sopName}
           </div>
         )}
 
-        <label style={labelStyle}>Operator</label>
-        <input style={inputStyle} value={form.operator} onChange={set('operator')} placeholder="Your name" />
+        <label style={labelStyle}>{t('Operator')}</label>
+        <input style={inputStyle} value={form.operator} onChange={set('operator')} placeholder={t('Your name')} />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-          <div>
-            <label style={labelStyle}>Start Time</label>
-            <input style={inputStyle} type="datetime-local" value={form.startTime} onChange={set('startTime')} />
-          </div>
-          <div>
-            <label style={labelStyle}>End Time</label>
-            <input style={inputStyle} type="datetime-local" value={form.endTime} onChange={set('endTime')} />
-          </div>
-        </div>
+        <label style={labelStyle}>{t('Run Date')}</label>
+        <input style={inputStyle} type="date" value={form.date} onChange={set('date')} />
 
-        <label style={labelStyle}>Equipment Used</label>
-        <input style={inputStyle} value={form.equipment} onChange={set('equipment')} placeholder="e.g. Mixer #2, Tempering Machine" />
-
-        <label style={labelStyle}>Notes</label>
+        <label style={labelStyle}>{t('Notes')}</label>
         <textarea
           style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }}
           value={form.notes}
           onChange={set('notes')}
-          placeholder="Production notes…"
+          placeholder={t('Production notes…')}
         />
 
-        <label style={labelStyle}>Deviations</label>
+        <div className="form-row">
+          <div>
+            <label style={labelStyle}>{t('Actual Quantity')} {form.unit ? `(${form.unit})` : ''}</label>
+            <input style={inputStyle} type="number" min="0" step="any" value={form.actualQuantity} onChange={set('actualQuantity')} placeholder="0" />
+          </div>
+          <div>
+            <label style={labelStyle}>{t('Waste Quantity')} {form.unit ? `(${form.unit})` : ''}</label>
+            <input style={inputStyle} type="number" min="0" step="any" value={form.wasteQuantity} onChange={set('wasteQuantity')} placeholder="0" />
+          </div>
+        </div>
+
+        <label style={labelStyle}>{t('Deviations')}</label>
         <textarea
           style={{ ...inputStyle, minHeight: 60, resize: 'vertical', borderColor: form.deviations ? '#f59e0b' : '#d1d5db' }}
           value={form.deviations}
           onChange={set('deviations')}
-          placeholder="Any deviations from the SOP or expected process? Leave blank if none."
+          placeholder={t('Any deviations from the SOP or expected process? Leave blank if none.')}
         />
 
-        <label style={labelStyle}>Photos</label>
+        <label style={labelStyle}>{t('Photos')}</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.875rem' }}>
           {photos.map((p, i) => (
             <div key={i} style={{ position: 'relative' }}>
@@ -231,7 +231,7 @@ export default function ProductionLogForm() {
             setStep('sign')
           }}
         >
-          Review & Sign →
+          {t('Review & Sign →')}
         </button>
       </div>
     </div>

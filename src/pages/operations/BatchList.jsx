@@ -4,20 +4,21 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { formatDate } from '../../utils/format'
 import { card, badge, btn } from '../../styles/common'
-
-const STATUS_LABELS = {
-  scheduled: 'Scheduled',
-  in_production: 'In Production',
-  complete: 'Complete',
-  hold: 'Hold',
-  released: 'Released',
-}
+import { useTranslation } from 'react-i18next'
 
 export default function BatchList() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [batches, setBatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('active')
+
+  const STATUS_LABELS = {
+    backlog: t('Backlog'), queued: t('In Queue'),
+    in_production: t('In Progress'), packaged: t('Packaged'),
+    complete: t('Complete'), hold: t('Hold'),
+    scheduled: t('Backlog'), released: t('Complete'),
+  }
 
   useEffect(() => {
     getDocs(query(collection(db, 'productionBatches'), orderBy('createdAt', 'desc')))
@@ -29,13 +30,13 @@ export default function BatchList() {
 
   const filtered = filter === 'all'
     ? batches
-    : batches.filter(b => ['scheduled', 'in_production'].includes(b.status))
+    : batches.filter(b => ['backlog', 'queued', 'in_production', 'packaged', 'scheduled'].includes(b.status))
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={pageTitle}>Production Batches</h1>
-        <button style={btn.primary} onClick={() => navigate('/operations/batches/new')}>+ New Batch</button>
+        <h1 style={pageTitle}>{t('Work Orders')}</h1>
+        <button style={btn.primary} onClick={() => navigate('/operations/batches/new')}>{t('+ New Work Order')}</button>
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -45,15 +46,15 @@ export default function BatchList() {
             style={{ ...filterBtn, background: filter === f ? '#1d4ed8' : '#fff', color: filter === f ? '#fff' : '#374151' }}
             onClick={() => setFilter(f)}
           >
-            {f === 'active' ? 'Active' : 'All'}
+            {f === 'active' ? t('Active') : t('All Batches')}
           </button>
         ))}
       </div>
 
-      {loading && <p style={muted}>Loading…</p>}
+      {loading && <p style={muted}>{t('Loading…')}</p>}
 
       {!loading && filtered.length === 0 && (
-        <p style={muted}>No batches found.</p>
+        <p style={muted}>{t('No batches found.')}</p>
       )}
 
       {filtered.map(b => (
@@ -79,9 +80,9 @@ export default function BatchList() {
               </div>
             </div>
           </div>
-          {b.quantityProduced > 0 && (
+          {(b.plannedQuantity > 0 || b.quantityProduced > 0) && (
             <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.3rem' }}>
-              {b.quantityProduced.toLocaleString()} {b.unit}
+              {t('Planned')}: {(b.plannedQuantity || b.quantityProduced || 0).toLocaleString()} {b.unit}
             </div>
           )}
         </div>
@@ -91,7 +92,7 @@ export default function BatchList() {
 }
 
 function statusColor(status) {
-  const colors = { scheduled: '#d97706', in_production: '#1d4ed8', complete: '#7e22ce', hold: '#dc2626', released: '#16a34a' }
+  const colors = { backlog: '#6b7280', queued: '#d97706', in_production: '#1d4ed8', packaged: '#7e22ce', complete: '#16a34a', hold: '#dc2626', scheduled: '#6b7280', released: '#16a34a' }
   return colors[status] || '#d1d5db'
 }
 

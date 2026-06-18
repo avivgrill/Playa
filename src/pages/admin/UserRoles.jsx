@@ -4,8 +4,10 @@ import { collection, getDocs, updateDoc, doc } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { card } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 export default function UserRoles() {
+  const { t } = useTranslation()
   const { currentUser } = useAuth()
   const navigate = useNavigate()
   const [users, setUsers] = useState([])
@@ -33,11 +35,11 @@ export default function UserRoles() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/dashboard')}>← Dashboard</button>
-      <h1 style={pageTitle}>User Roles</h1>
-      <p style={muted}>Only users who have signed in at least once appear here.</p>
+      <button style={backBtn} onClick={() => navigate('/dashboard')}>{t('← Dashboard')}</button>
+      <h1 style={pageTitle}>{t('User Roles')}</h1>
+      <p style={muted}>{t('Only users who have signed in at least once appear here.')}</p>
 
-      {loading ? <p style={muted}>Loading…</p> : (
+      {loading ? <p style={muted}>{t('Loading…')}</p> : (
         <div style={card}>
           {users.map(user => (
             <div key={user.uid} style={row}>
@@ -51,13 +53,13 @@ export default function UserRoles() {
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                 <Toggle
-                  label="Admin"
+                  label={t('Admin')}
                   value={!!user.isAdmin}
                   disabled={user.uid === currentUser.uid || saving === user.uid + 'isAdmin'}
                   onChange={v => toggle(user.uid, 'isAdmin', v)}
                 />
                 <Toggle
-                  label="Timecard"
+                  label={t('Timecard')}
                   value={!!user.hasTimecard}
                   disabled={saving === user.uid + 'hasTimecard'}
                   onChange={v => toggle(user.uid, 'hasTimecard', v)}
@@ -72,6 +74,7 @@ export default function UserRoles() {
 }
 
 function Toggle({ label, value, disabled, onChange }) {
+  const { t } = useTranslation()
   return (
     <button
       onClick={() => !disabled && onChange(!value)}
@@ -90,7 +93,7 @@ function Toggle({ label, value, disabled, onChange }) {
         transition: 'all 0.15s',
       }}
     >
-      {label} {value ? 'ON' : 'OFF'}
+      {label} {value ? t('ON') : t('OFF')}
     </button>
   )
 }

@@ -4,11 +4,13 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { formatDate } from '../../utils/format'
 import { card, badge, btn } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 const STATUS_COLORS = { available: '#16a34a', hold: '#d97706', used: '#9ca3af', recalled: '#dc2626' }
 
 export default function LotList() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [lots, setLots] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('available')
@@ -37,15 +39,15 @@ export default function LotList() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={pageTitle}>Ingredient Lots</h1>
-        <button style={btn.primary} onClick={() => navigate('/operations/receive')}>Receive</button>
+        <h1 style={pageTitle}>{t('Ingredient Lots')}</h1>
+        <button style={btn.primary} onClick={() => navigate('/operations/receive')}>{t('Receive')}</button>
       </div>
 
       <input
         style={{ ...searchInput, marginBottom: '0.75rem' }}
         value={search}
         onChange={e => setSearch(e.target.value)}
-        placeholder="Search ingredient, lot number…"
+        placeholder={t('Search ingredient, lot number…')}
       />
 
       <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
@@ -53,13 +55,13 @@ export default function LotList() {
           <button key={f}
             style={{ ...filterBtn, background: filter === f ? '#1d4ed8' : '#fff', color: filter === f ? '#fff' : '#374151' }}
             onClick={() => setFilter(f)}>
-            {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+            {f === 'all' ? t('All') : f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
       </div>
 
-      {loading && <p style={muted}>Loading…</p>}
-      {!loading && filtered.length === 0 && <p style={muted}>No lots found.</p>}
+      {loading && <p style={muted}>{t('Loading…')}</p>}
+      {!loading && filtered.length === 0 && <p style={muted}>{t('No lots found.')}</p>}
 
       {filtered.map(lot => (
         <div key={lot.id} style={{ ...card, cursor: 'pointer', borderLeft: `4px solid ${STATUS_COLORS[lot.status] || '#d1d5db'}` }}
@@ -68,14 +70,14 @@ export default function LotList() {
             <div>
               <div style={{ fontWeight: 700, color: '#111827' }}>{lot.ingredientName}</div>
               <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.1rem' }}>{lot.internalLotNumber}</div>
-              {lot.supplierLotNumber && <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Supplier: {lot.supplierLotNumber}</div>}
-              <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Received {formatDate(lot.receivedDate)}</div>
+              {lot.supplierLotNumber && <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{t('Supplier')}: {lot.supplierLotNumber}</div>}
+              <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{t('Received')} {formatDate(lot.receivedDate)}</div>
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               <div style={{ fontWeight: 700, color: STATUS_COLORS[lot.status] || '#374151' }}>
                 {lot.currentQuantity?.toLocaleString()} {lot.unit}
               </div>
-              <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>of {lot.originalQuantity?.toLocaleString()}</div>
+              <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{t('of')} {lot.originalQuantity?.toLocaleString()} {t('received')}</div>
               <span style={{ ...badge[lot.status], marginTop: '0.25rem', display: 'inline-block' }}>{lot.status}</span>
             </div>
           </div>

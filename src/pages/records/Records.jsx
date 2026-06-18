@@ -5,11 +5,13 @@ import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { formatDateTime } from '../../utils/format'
 import { card, badge, input, label, btn } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 const ADMIN_EMAIL = 'avivgrill@gmail.com'
 
 export default function Records() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { currentUser } = useAuth()
   const isAdmin = currentUser?.email === ADMIN_EMAIL
 
@@ -37,9 +39,9 @@ export default function Records() {
         getDocs(query(collection(db, 'correctiveActions'), orderBy('createdAt', 'desc'))),
       ])
       const records = [
-        ...inspSnap.docs.map(d => ({ id: d.id, _type: 'inspection',        _date: d.data().completedAt, ...d.data() })),
-        ...cleanSnap.docs.map(d => ({ id: d.id, _type: 'cleaningLog',      _date: d.data().completedAt, ...d.data() })),
-        ...caSnap.docs.map(d  => ({ id: d.id, _type: 'correctiveAction',  _date: d.data().createdAt,   ...d.data() })),
+        ...inspSnap.docs.map(d => ({ id: d.id, _type: 'inspection',       _date: d.data().completedAt, ...d.data() })),
+        ...cleanSnap.docs.map(d => ({ id: d.id, _type: 'cleaningLog',     _date: d.data().completedAt, ...d.data() })),
+        ...caSnap.docs.map(d  => ({ id: d.id, _type: 'correctiveAction', _date: d.data().createdAt,   ...d.data() })),
       ].sort((a, b) => {
         const at = a._date?.toDate?.() || new Date(0)
         const bt = b._date?.toDate?.() || new Date(0)
@@ -93,8 +95,16 @@ export default function Records() {
   }
 
   // ── Filtering ───────────────────────────────────────────────────────────────
+  const INSP_SUBTYPES = new Set(['daily_facility', 'pre_operational', 'weekly_facility', 'monthly_facility'])
+
   const filtered = all.filter(r => {
-    if (typeFilter !== 'all' && r._type !== typeFilter) return false
+    if (typeFilter !== 'all') {
+      if (INSP_SUBTYPES.has(typeFilter)) {
+        if (r._type !== 'inspection' || r.type !== typeFilter) return false
+      } else {
+        if (r._type !== typeFilter) return false
+      }
+    }
     if (dateFrom) { const d = r._date?.toDate?.(); if (!d || d < new Date(dateFrom)) return false }
     if (dateTo)   { const d = r._date?.toDate?.(); if (!d || d > new Date(dateTo + 'T23:59:59')) return false }
     if (search.trim()) {
@@ -118,39 +128,45 @@ export default function Records() {
     <div>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Records</h1>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('Records')}</h1>
         <button style={{ background: '#fff', border: '1px solid #d1d5db', borderRadius: 8, padding: '0.5rem 1rem', fontSize: '0.875rem', cursor: 'pointer' }} onClick={exportCSV}>
-          Export CSV
+          {t('Export CSV')}
         </button>
       </div>
 
       {/* Filters */}
       <div style={{ ...card, padding: '0.875rem' }}>
         <input style={{ display: 'block', width: '100%', padding: '0.65rem 0.875rem', border: '1px solid #d1d5db', borderRadius: 8, fontSize: '0.95rem', marginBottom: '0.75rem' }}
-          type="text" placeholder="Search records…" value={search} onChange={e => setSearch(e.target.value)} />
+          type="text" placeholder={t('Search records…')} value={search} onChange={e => setSearch(e.target.value)} />
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <select style={sel} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-            <option value="all">All types</option>
-            <option value="inspection">Inspections</option>
-            <option value="cleaningLog">Cleaning Logs</option>
-            <option value="correctiveAction">Corrective Actions</option>
+            <option value="all">{t('All types')}</option>
+            <optgroup label={t('Inspections')}>
+              <option value="inspection">{t('All Inspections')}</option>
+              <option value="daily_facility">— {t('Daily')}</option>
+              <option value="pre_operational">— {t('Pre-Op')}</option>
+              <option value="weekly_facility">— {t('Weekly')}</option>
+              <option value="monthly_facility">— {t('Monthly')}</option>
+            </optgroup>
+            <option value="cleaningLog">{t('Cleaning Logs')}</option>
+            <option value="correctiveAction">{t('Corrective Actions')}</option>
           </select>
           <input style={sel} type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} title="From date" />
           <input style={sel} type="date" value={dateTo}   onChange={e => setDateTo(e.target.value)}   title="To date" />
           {(search || typeFilter !== 'all' || dateFrom || dateTo) && (
             <button style={{ background: 'transparent', border: '1px solid #d1d5db', borderRadius: 8, padding: '0.4rem 0.75rem', fontSize: '0.8rem', cursor: 'pointer', color: '#6b7280' }}
               onClick={() => { setSearch(''); setTypeFilter('all'); setDateFrom(''); setDateTo('') }}>
-              Clear
+              {t('Clear')}
             </button>
           )}
         </div>
       </div>
 
-      <p style={{ fontSize: '0.8rem', color: '#9ca3af', marginBottom: '0.75rem' }}>{filtered.length} record{filtered.length !== 1 ? 's' : ''}</p>
+      <p style={{ fontSize: '0.8rem', color: '#9ca3af', marginBottom: '0.75rem' }}>{filtered.length === 1 ? t('{{count}} record', { count: filtered.length }) : t('{{count}} records', { count: filtered.length })}</p>
 
       {/* Record list */}
-      {loading ? <p style={{ color: '#9ca3af' }}>Loading…</p> : filtered.length === 0 ? (
-        <p style={{ color: '#9ca3af', textAlign: 'center', marginTop: '2rem' }}>No records match your filters.</p>
+      {loading ? <p style={{ color: '#9ca3af' }}>{t('Loading…')}</p> : filtered.length === 0 ? (
+        <p style={{ color: '#9ca3af', textAlign: 'center', marginTop: '2rem' }}>{t('No records match your filters.')}</p>
       ) : filtered.map(r => (
         <div key={`${r._type}-${r.id}`} style={{ ...card, cursor: 'pointer' }} onClick={() => navigate(pathFor(r))}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
@@ -197,7 +213,7 @@ export default function Records() {
         <div style={modalOverlay} onClick={() => setEditRecord(null)}>
           <div style={modalBox} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Edit Record</h2>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{t('Edit Record')}</h2>
               <button style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#6b7280' }} onClick={() => setEditRecord(null)}>✕</button>
             </div>
 
@@ -214,7 +230,7 @@ export default function Records() {
 
               {editRecord._type === 'inspection' && (
                 <>
-                  <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '0.75rem' }}>Pass/Fail results are locked. You can edit item notes only.</p>
+                  <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '0.75rem' }}>{t('Pass/Fail results are locked. You can edit item notes only.')}</p>
                   {editForm.items?.map((item, idx) => (
                     <div key={item.id} style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
@@ -247,9 +263,9 @@ export default function Records() {
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-              <button style={{ ...btn.secondary, flex: 1 }} onClick={() => setEditRecord(null)}>Cancel</button>
+              <button style={{ ...btn.secondary, flex: 1 }} onClick={() => setEditRecord(null)}>{t('Cancel')}</button>
               <button style={{ ...btn.primary, flex: 1 }} onClick={handleSave} disabled={saving}>
-                {saving ? 'Saving…' : 'Save Changes'}
+                {saving ? t('Saving…') : t('Save Changes')}
               </button>
             </div>
           </div>
@@ -273,11 +289,15 @@ function F({ label: lbl, value, onChange, textarea }) {
 }
 
 // ── Record helpers ────────────────────────────────────────────────────────────
+const INSP_TYPE_LABELS = {
+  daily_facility: 'Daily Inspection',
+  pre_operational: 'Pre-Op Inspection',
+  weekly_facility: 'Weekly Inspection',
+  monthly_facility: 'Monthly Verification',
+}
+
 function typeLabel(r) {
-  if (r._type === 'inspection') {
-    const m = { daily_facility: 'Daily Inspection', pre_operational: 'Pre-Op Inspection', weekly_facility: 'Weekly Inspection', monthly_facility: 'Monthly Verification' }
-    return m[r.type] || 'Inspection'
-  }
+  if (r._type === 'inspection') return INSP_TYPE_LABELS[r.type] || 'Inspection'
   if (r._type === 'cleaningLog') return 'Cleaning Log'
   return 'Corrective Action'
 }

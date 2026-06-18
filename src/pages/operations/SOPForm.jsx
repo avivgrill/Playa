@@ -4,11 +4,15 @@ import { doc, getDoc, addDoc, updateDoc, collection, serverTimestamp, Timestamp,
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { card, btn, input, label } from '../../styles/common'
+import { getNextSopNumber } from '../../utils/sopNumber'
+import { useTranslation } from 'react-i18next'
+import TranslateButton from '../../components/TranslateButton'
 
 export default function SOPForm() {
   const { id } = useParams()
   const isEdit = id && id !== 'new'
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { currentUser } = useAuth()
 
   const [form, setForm] = useState({
@@ -58,8 +62,10 @@ export default function SOPForm() {
         })
         navigate(`/operations/sops/${id}`)
       } else {
+        const sopNumber = await getNextSopNumber()
         const docRef = await addDoc(collection(db, 'sops'), {
           ...form,
+          sopNumber,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: userInfo,
@@ -73,54 +79,55 @@ export default function SOPForm() {
     }
   }
 
-  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>Loading…</p>
+  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>{t('Loading…')}</p>
 
   return (
     <div>
       <button style={backBtn} onClick={() => navigate(isEdit ? `/operations/sops/${id}` : '/operations/sops')}>
-        ← {isEdit ? 'Back to SOP' : 'Back to SOPs'}
+        {isEdit ? t('← Back to SOP') : t('← Back to SOPs')}
       </button>
-      <h1 style={pageTitle}>{isEdit ? 'Edit SOP' : 'New SOP'}</h1>
+      <h1 style={pageTitle}>{isEdit ? t('Edit SOP') : t('New SOP')}</h1>
 
       <form onSubmit={handleSubmit} style={card}>
-        <label style={label}>SOP Name *</label>
-        <input style={input} value={form.name} onChange={set('name')} placeholder="e.g. Chocolate Bar Production" />
+        <label style={label}>{t('SOP Name *')}</label>
+        <input style={input} value={form.name} onChange={set('name')} placeholder={t('e.g. Chocolate Bar Production')} />
 
-        <label style={label}>Product Type *</label>
-        <input style={input} value={form.productType} onChange={set('productType')} placeholder="e.g. Chocolate, Candy, All Products" />
+        <label style={label}>{t('Product Type *')}</label>
+        <input style={input} value={form.productType} onChange={set('productType')} placeholder={t('e.g. Chocolate, Candy, All Products')} />
 
-        <label style={label}>Instructions</label>
+        <label style={label}>{t('Instructions')}</label>
         <textarea
           style={{ ...input, minHeight: 140, resize: 'vertical' }}
           value={form.instructions}
           onChange={set('instructions')}
-          placeholder="Step-by-step production instructions…"
+          placeholder={t('Step-by-step production instructions…')}
         />
+        <TranslateButton text={form.instructions} style={{ marginBottom: '0.875rem' }} />
 
-        <label style={label}>Notes</label>
+        <label style={label}>{t('Notes')}</label>
         <textarea
           style={{ ...input, minHeight: 80, resize: 'vertical' }}
           value={form.notes}
           onChange={set('notes')}
-          placeholder="Additional notes, references, or special requirements…"
+          placeholder={t('Additional notes, references, or special requirements…')}
         />
 
-        <label style={label}>Status</label>
+        <label style={label}>{t('Status')}</label>
         <select style={input} value={form.status} onChange={set('status')}>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">{t('Active')}</option>
+          <option value="inactive">{t('Inactive')}</option>
         </select>
 
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
           <button type="submit" style={btn.primary} disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create SOP'}
+            {saving ? t('Saving…') : isEdit ? t('Save Changes') : t('Create SOP')}
           </button>
           <button
             type="button"
             style={btn.secondary}
             onClick={() => navigate(isEdit ? `/operations/sops/${id}` : '/operations/sops')}
           >
-            Cancel
+            {t('Cancel')}
           </button>
         </div>
       </form>

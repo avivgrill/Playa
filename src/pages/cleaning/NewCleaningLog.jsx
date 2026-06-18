@@ -5,9 +5,12 @@ import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import PhotoUpload from '../../components/PhotoUpload'
 import { card, btn, input, label } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
+import TranslateButton from '../../components/TranslateButton'
 
 export default function NewCleaningLog() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { currentUser } = useAuth()
 
   const [form, setForm] = useState({ area: '', equipment: '', chemical: '', concentration: '', notes: '' })
@@ -47,15 +50,16 @@ export default function NewCleaningLog() {
 
   return (
     <div style={{ maxWidth: 560, margin: '0 auto' }}>
-      <button style={backBtn} onClick={() => navigate('/cleaning')}>← Cleaning Logs</button>
-      <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>New Cleaning Log</h1>
+      <button style={backBtn} onClick={() => navigate('/cleaning')}>{t('← Cleaning History')}</button>
+      <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>{t('New Cleaning Log')}</h1>
 
       <form onSubmit={handleSubmit} style={card}>
-        <Field label="Area cleaned *" value={form.area} onChange={set('area')} placeholder="e.g. Production floor, Break room" />
-        <Field label="Equipment cleaned *" value={form.equipment} onChange={set('equipment')} placeholder="e.g. Mixer #2, Conveyor belt" />
-        <Field label="Cleaning chemical *" value={form.chemical} onChange={set('chemical')} placeholder="e.g. Quat sanitizer" />
-        <Field label="Concentration / dilution" value={form.concentration} onChange={set('concentration')} placeholder="e.g. 200 ppm" />
-        <Field label="Notes" value={form.notes} onChange={set('notes')} placeholder="Any additional notes" textarea />
+        <Field label={t('Area *')} value={form.area} onChange={set('area')} placeholder={t('e.g. Kitchen, Mixing Room')} />
+        <Field label={t('Equipment *')} value={form.equipment} onChange={set('equipment')} placeholder={t('e.g. Mixer, Kettle, Conveyor')} />
+        <Field label={t('Chemical Used *')} value={form.chemical} onChange={set('chemical')} placeholder={t('e.g. Sanidate, Bleach solution')} />
+        <Field label={t('Concentration / Dilution')} value={form.concentration} onChange={set('concentration')} placeholder={t('e.g. 200 ppm, 1:10 dilution')} />
+        <Field label={t('Notes')} value={form.notes} onChange={set('notes')} placeholder={t('Additional notes…')} textarea />
+        <TranslateButton text={form.notes} style={{ marginBottom: '0.875rem' }} />
 
         <div style={{ marginBottom: '1.25rem' }}>
           <label style={label}>Photo (optional)</label>
@@ -63,7 +67,7 @@ export default function NewCleaningLog() {
         </div>
 
         <div style={{ background: '#f9fafb', borderRadius: 8, padding: '0.75rem', marginBottom: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
-          <strong style={{ color: '#374151' }}>Submitted by:</strong> {currentUser.displayName || currentUser.email}
+          <strong style={{ color: '#374151' }}>{t('Completed by')}:</strong> {currentUser.displayName || currentUser.email}
         </div>
 
         <button
@@ -71,7 +75,7 @@ export default function NewCleaningLog() {
           style={{ ...btn.primary, width: '100%', opacity: canSubmit ? 1 : 0.4 }}
           disabled={!canSubmit || submitting}
         >
-          {submitting ? 'Saving…' : 'Submit Cleaning Log'}
+          {submitting ? t('Saving…') : t('Submit Cleaning Log')}
         </button>
       </form>
     </div>

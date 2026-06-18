@@ -4,10 +4,12 @@ import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebas
 import { db } from '../../firebase/config'
 import { formatDate, formatDateTime } from '../../utils/format'
 import { card, badge, btn } from '../../styles/common'
+import { useTranslation } from 'react-i18next'
 
 export default function CustomerDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [customer, setCustomer] = useState(null)
   const [allocations, setAllocations] = useState([])
   const [loading, setLoading] = useState(true)
@@ -25,15 +27,15 @@ export default function CustomerDetail() {
     load()
   }, [id])
 
-  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>Loading…</p>
-  if (!customer) return <p style={{ color: '#dc2626', padding: '1rem' }}>Customer not found.</p>
+  if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>{t('Loading…')}</p>
+  if (!customer) return <p style={{ color: '#dc2626', padding: '1rem' }}>{t('Customer not found.')}</p>
 
   const totalAllocated = allocations.reduce((sum, a) => sum + (a.quantityAllocated || 0), 0)
   const uniqueBatches = [...new Set(allocations.map(a => a.batchId))].length
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/operations/customers')}>← Customers</button>
+      <button style={backBtn} onClick={() => navigate('/operations/customers')}>{t('← Customers')}</button>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', gap: '0.5rem' }}>
         <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#111827' }}>{customer.customerName}</h1>
@@ -41,29 +43,29 @@ export default function CustomerDetail() {
       </div>
 
       <div style={card}>
-        {customer.contactName && <Row label="Contact" value={customer.contactName} />}
-        {customer.email && <Row label="Email" value={customer.email} />}
-        {customer.phone && <Row label="Phone" value={customer.phone} />}
-        <Row label="Added" value={formatDateTime(customer.createdAt)} />
-        {customer.notes && <Row label="Notes" value={customer.notes} />}
+        {customer.contactName && <Row label={t('Contact')} value={customer.contactName} />}
+        {customer.email && <Row label={t('Email')} value={customer.email} />}
+        {customer.phone && <Row label={t('Phone')} value={customer.phone} />}
+        <Row label={t('Added')} value={formatDateTime(customer.createdAt)} />
+        {customer.notes && <Row label={t('Notes')} value={customer.notes} />}
       </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
         <button style={btn.primary} onClick={() => navigate(`/operations/customers/${id}/edit`)}>
-          Edit
+          {t('Edit')}
         </button>
       </div>
 
       {/* Allocation Summary */}
       <div style={{ ...card, background: '#f8fafc', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-        <Stat label="Total Batches" value={uniqueBatches} />
-        <Stat label="Allocations" value={allocations.length} />
-        <Stat label="Units Allocated" value={totalAllocated > 0 ? totalAllocated.toLocaleString() : '—'} />
+        <Stat label={t('Total Batches')} value={uniqueBatches} />
+        <Stat label={t('Allocations')} value={allocations.length} />
+        <Stat label={t('Units Allocated')} value={totalAllocated > 0 ? totalAllocated.toLocaleString() : '—'} />
       </div>
 
-      <h2 style={sectionHead}>Allocation History</h2>
+      <h2 style={sectionHead}>{t('Allocation History')}</h2>
 
-      {allocations.length === 0 && <p style={muted}>No allocations yet.</p>}
+      {allocations.length === 0 && <p style={muted}>{t('No allocations yet.')}</p>}
 
       {allocations.map(a => (
         <div
