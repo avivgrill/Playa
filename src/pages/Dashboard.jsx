@@ -210,10 +210,9 @@ export default function Dashboard() {
         <div style={quickPanel}>
           <h2 style={sectionTitle}>{t('Quick Actions')}</h2>
           <div className="form-row" style={{ gap: '0.5rem' }}>
-            <QuickBtn label={t('New Batch')} icon="🍬" onClick={() => navigate('/operations/batches/new')} />
+            <QuickBtn label={t('New Card')} icon="🍬" onClick={() => navigate('/production')} />
             <QuickBtn label={t('Receive Stock')} icon="📦" onClick={() => navigate('/operations/receive')} />
-            <QuickBtn label={t('Log Run')} icon="📋" onClick={() => navigate('/operations/logs/new')} />
-            <QuickBtn label={t('Cleaning Log')} icon="🧹" onClick={() => navigate('/cleaning/new')} />
+            <QuickBtn label={t('Cleaning Log')} icon="🧹" onClick={() => navigate('/compliance')} />
           </div>
         </div>
       </div>
@@ -222,8 +221,8 @@ export default function Dashboard() {
       {!loading && (data?.activeBatches.length > 0 || data?.scheduledBatches.length > 0) && (
         <div style={card}>
           <div style={cardHeader}>
-            <h2 style={{ ...sectionTitle, marginBottom: 0 }}>{t('Active Batches')}</h2>
-            <button style={linkBtn} onClick={() => navigate('/operations/batches')}>{t('View All')}</button>
+            <h2 style={{ ...sectionTitle, marginBottom: 0 }}>{t('In Production')}</h2>
+            <button style={linkBtn} onClick={() => navigate('/production')}>{t('View All')}</button>
           </div>
           {[...data.activeBatches, ...data.scheduledBatches].map(b => {
             const needsLog = data.batchesNeedingLog.has(b.id)

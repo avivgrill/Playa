@@ -92,9 +92,9 @@ export default function ClientOrderDetail() {
       {/* Linked Work Orders */}
       <div style={{ marginTop: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <h2 style={sectionHead}>{t('Work Orders')} ({workOrders.length})</h2>
-          <button style={btn.primary} onClick={() => navigate(`/operations/batches/new?clientOrderId=${id}`)}>
-            {t('+ New Work Order')}
+          <h2 style={sectionHead}>{t('Production Cards')} ({workOrders.length})</h2>
+          <button style={btn.primary} onClick={() => navigate('/production')}>
+            {t('+ New Card')}
           </button>
         </div>
         {workOrders.length === 0 && <p style={muted}>{t('No work orders yet.')}</p>}

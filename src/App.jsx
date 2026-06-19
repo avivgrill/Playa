@@ -16,11 +16,7 @@ import Records from './pages/records/Records'
 import SOPList from './pages/operations/SOPList'
 import SOPForm from './pages/operations/SOPForm'
 import SOPDetail from './pages/operations/SOPDetail'
-import BatchList from './pages/operations/BatchList'
-import BatchForm from './pages/operations/BatchForm'
 import BatchDetail from './pages/operations/BatchDetail'
-import ProductionLogList from './pages/operations/ProductionLogList'
-import ProductionLogForm from './pages/operations/ProductionLogForm'
 import ProductionLogDetail from './pages/operations/ProductionLogDetail'
 import CustomerList from './pages/operations/CustomerList'
 import CustomerForm from './pages/operations/CustomerForm'
@@ -75,11 +71,11 @@ export default function App() {
             <Route path="operations/sops/new" element={<SOPForm />} />
             <Route path="operations/sops/:id" element={<SOPDetail />} />
             <Route path="operations/sops/:id/edit" element={<SOPForm />} />
-            <Route path="operations/batches" element={<BatchList />} />
-            <Route path="operations/batches/new" element={<BatchForm />} />
+            <Route path="operations/batches" element={<Navigate to="/production" replace />} />
+            <Route path="operations/batches/new" element={<Navigate to="/production" replace />} />
             <Route path="operations/batches/:id" element={<BatchDetail />} />
-            <Route path="operations/logs" element={<ProductionLogList />} />
-            <Route path="operations/logs/new" element={<ProductionLogForm />} />
+            <Route path="operations/logs" element={<Navigate to="/production" replace />} />
+            <Route path="operations/logs/new" element={<Navigate to="/production" replace />} />
             <Route path="operations/logs/:id" element={<ProductionLogDetail />} />
             <Route path="operations/customers" element={<CustomerList />} />
             <Route path="operations/customers/new" element={<CustomerForm />} />

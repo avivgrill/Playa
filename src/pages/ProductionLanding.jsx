@@ -127,8 +127,6 @@ export default function ProductionLanding() {
             <Link to="/operations/fg-lots" style={s.qLink}>FG Lots</Link>
             <span style={s.dot}>·</span>
             <Link to="/operations/sops" style={s.qLink}>SOPs</Link>
-            <span style={s.dot}>·</span>
-            <Link to="/operations/logs" style={s.qLink}>All Runs</Link>
           </div>
         </div>
         <button style={s.newBtn} onClick={() => setShowNewCard(true)}>+ New Card</button>
