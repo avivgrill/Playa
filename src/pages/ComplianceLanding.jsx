@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { collection, query, where, getDocs } from 'firebase/firestore'
+import { collection, addDoc, query, where, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { todayString } from '../utils/format'
+import { useAuth } from '../contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
+import Modal from '../components/Modal'
+import { btn, input, label } from '../styles/common'
 
 function weekBounds() {
   const now = new Date()
@@ -28,7 +31,41 @@ function monthBounds() {
 export default function ComplianceLanding() {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { currentUser } = useAuth()
   const [status, setStatus] = useState(null)
+  const [showCleaningModal, setShowCleaningModal] = useState(false)
+  const [cleaningForm, setCleaningForm] = useState({ area: '', equipment: '', chemical: '', concentration: '', notes: '' })
+  const [cleaningSaving, setCleaningSaving] = useState(false)
+
+  const setC = f => e => setCleaningForm(prev => ({ ...prev, [f]: e.target.value }))
+  const canSubmitCleaning = cleaningForm.area.trim() && cleaningForm.equipment.trim() && cleaningForm.chemical.trim()
+
+  async function submitCleaning(e) {
+    e.preventDefault()
+    if (!canSubmitCleaning || cleaningSaving) return
+    setCleaningSaving(true)
+    try {
+      const userInfo = { uid: currentUser.uid, displayName: currentUser.displayName || currentUser.email, email: currentUser.email }
+      await addDoc(collection(db, 'cleaningLogs'), {
+        area: cleaningForm.area.trim(),
+        equipment: cleaningForm.equipment.trim(),
+        chemical: cleaningForm.chemical.trim(),
+        concentration: cleaningForm.concentration.trim(),
+        notes: cleaningForm.notes.trim(),
+        photoUrl: null, photoPath: null,
+        completedAt: serverTimestamp(),
+        createdBy: userInfo,
+        verificationStatus: 'pending',
+        verification: null,
+        auditLog: [{ action: 'created', changedBy: userInfo, changedAt: Timestamp.now(), changes: {} }],
+      })
+      setCleaningForm({ area: '', equipment: '', chemical: '', concentration: '', notes: '' })
+      setShowCleaningModal(false)
+    } catch (err) {
+      alert('Error saving. Please try again.')
+    }
+    setCleaningSaving(false)
+  }
 
   useEffect(() => {
     async function load() {
@@ -120,7 +157,7 @@ export default function ComplianceLanding() {
         <ActionRow
           icon="🧹"
           label={t('New Cleaning Log')}
-          onClick={() => navigate('/cleaning/new')}
+          onClick={() => setShowCleaningModal(true)}
         />
         <ActionRow
           icon="⚠️"
@@ -136,6 +173,24 @@ export default function ComplianceLanding() {
           onClick={() => navigate('/corrective-actions')}
         />
       </Section>
+
+      {showCleaningModal && (
+        <Modal title={t('New Cleaning Log')} onClose={() => setShowCleaningModal(false)}>
+          <form onSubmit={submitCleaning}>
+            <CleaningField label={t('Area *')} value={cleaningForm.area} onChange={setC('area')} placeholder={t('e.g. Kitchen, Mixing Room')} />
+            <CleaningField label={t('Equipment *')} value={cleaningForm.equipment} onChange={setC('equipment')} placeholder={t('e.g. Mixer, Kettle')} />
+            <CleaningField label={t('Chemical Used *')} value={cleaningForm.chemical} onChange={setC('chemical')} placeholder={t('e.g. Sanidate, Bleach solution')} />
+            <CleaningField label={t('Concentration / Dilution')} value={cleaningForm.concentration} onChange={setC('concentration')} placeholder={t('e.g. 200 ppm')} />
+            <CleaningField label={t('Notes')} value={cleaningForm.notes} onChange={setC('notes')} textarea />
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button type="button" style={{ ...btn.secondary, flex: 1 }} onClick={() => setShowCleaningModal(false)}>{t('Cancel')}</button>
+              <button type="submit" style={{ ...btn.primary, flex: 2, opacity: canSubmitCleaning ? 1 : 0.4 }} disabled={!canSubmitCleaning || cleaningSaving}>
+                {cleaningSaving ? t('Saving…') : t('Submit')}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   )
 }
@@ -163,6 +218,17 @@ function InspectionRow({ label, done, loading, onClick }) {
         {loading ? '' : done ? t('View') : t('Start')}
       </span>
     </button>
+  )
+}
+
+function CleaningField({ label: lbl, value, onChange, placeholder, textarea }) {
+  return (
+    <div style={{ marginBottom: '0.875rem' }}>
+      <label style={label}>{lbl}</label>
+      {textarea
+        ? <textarea style={{ ...input, minHeight: 64, resize: 'vertical', marginBottom: 0 }} value={value} onChange={onChange} placeholder={placeholder} />
+        : <input style={{ ...input, marginBottom: 0 }} type="text" value={value} onChange={onChange} placeholder={placeholder} />}
+    </div>
   )
 }
 
