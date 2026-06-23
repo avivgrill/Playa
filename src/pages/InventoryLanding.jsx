@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { useTranslation } from 'react-i18next'
+import SlideOver from '../components/SlideOver'
+import ReceiveInventory from './operations/ReceiveInventory'
 
 export default function InventoryLanding() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [status, setStatus] = useState(null)
+  const [showReceive, setShowReceive] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -33,7 +36,7 @@ export default function InventoryLanding() {
 
       <SectionHeader title={t('Receiving')} />
       <div style={grid}>
-        <ActionCard icon="📦" title={t('Receive Inventory')} desc={t('Log incoming ingredient lots')} primary onClick={() => navigate('/operations/receive')} />
+        <ActionCard icon="📦" title={t('Receive Inventory')} desc={t('Log incoming ingredient lots')} primary onClick={() => setShowReceive(true)} />
         <ActionCard icon="📊" title={t('Inventory Table')} desc={t('View and edit current stock levels')} onClick={() => navigate('/operations/inventory')} />
       </div>
 
@@ -47,6 +50,12 @@ export default function InventoryLanding() {
       <div style={grid}>
         <ActionCard icon="🔍" title={t('Recall Trace')} desc={t('Trace a lot through production and customers')} onClick={() => navigate('/operations/recall')} />
       </div>
+
+      {showReceive && (
+        <SlideOver title={t('Receive Inventory')} onClose={() => setShowReceive(false)}>
+          <ReceiveInventory onClose={() => setShowReceive(false)} />
+        </SlideOver>
+      )}
     </div>
   )
 }

@@ -11,6 +11,12 @@ import { todayString, formatDate } from '../utils/format'
 import { getWeekStart, weekLabel, weekStartStr } from '../utils/timecard'
 import { card, badge, btn, input } from '../styles/common'
 import { useTranslation } from 'react-i18next'
+import Modal from '../components/Modal'
+import SlideOver from '../components/SlideOver'
+import NewCleaningLog from './cleaning/NewCleaningLog'
+import StartInspection from './inspections/StartInspection'
+import BatchForm from './operations/BatchForm'
+import ReceiveInventory from './operations/ReceiveInventory'
 
 const STATUS_LABELS = {
   scheduled: 'Scheduled',
@@ -25,6 +31,8 @@ export default function Dashboard() {
   const { currentUser, isAdmin, hasTimecard } = useAuth()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeModal, setActiveModal] = useState(null)
+  // null | 'cleaning' | 'newBatch' | 'receiveInventory' | 'daily_facility' | 'pre_operational'
 
   async function load() {
     const today = todayString()
@@ -133,12 +141,12 @@ export default function Dashboard() {
           <StatusChip
             done={data.dailyDone} warn={false}
             label={t('Daily')} sublabel={data.dailyDone ? t('Done') : t('Needed')}
-            onClick={() => navigate(data.dailyDone ? '/inspections' : '/inspections/new/daily_facility')}
+            onClick={() => data.dailyDone ? navigate('/inspections') : setActiveModal('daily_facility')}
           />
           <StatusChip
             done={data.preOpDone} warn={false}
             label={t('Pre-Op')} sublabel={data.preOpDone ? t('Done') : t('Needed')}
-            onClick={() => navigate(data.preOpDone ? '/inspections' : '/inspections/new/pre_operational')}
+            onClick={() => data.preOpDone ? navigate('/inspections') : setActiveModal('pre_operational')}
           />
           <StatusChip
             done={data.openCACount === 0}
@@ -193,8 +201,8 @@ export default function Dashboard() {
           <h2 style={sectionTitle}>{t("Today's Tasks")}</h2>
           {loading ? <p style={muted}>{t('Loading…')}</p> : (
             <div>
-              <TaskRow done={data.dailyDone} label={t('Daily Facility Inspection')} path="/inspections/new/daily_facility" navigate={navigate} />
-              <TaskRow done={data.preOpDone} label={t('Pre-Op Inspection')} path="/inspections/new/pre_operational" navigate={navigate} />
+              <TaskRow done={data.dailyDone} label={t('Daily Facility Inspection')} onStart={() => setActiveModal('daily_facility')} navigate={navigate} />
+              <TaskRow done={data.preOpDone} label={t('Pre-Op Inspection')} onStart={() => setActiveModal('pre_operational')} navigate={navigate} />
               {data.timecardDue && (
                 <TaskRow done={false} label={t("Submit Last Week's Timecard")} path="/timecard" navigate={navigate} />
               )}
@@ -205,9 +213,9 @@ export default function Dashboard() {
         <div style={quickPanel}>
           <h2 style={sectionTitle}>{t('Quick Actions')}</h2>
           <div className="form-row" style={{ gap: '0.5rem' }}>
-            <QuickBtn label={t('New Batch')} icon="🍬" onClick={() => navigate('/operations/batches/new')} />
-            <QuickBtn label={t('Receive Stock')} icon="📦" onClick={() => navigate('/operations/receive')} />
-            <QuickBtn label={t('Cleaning Log')} icon="🧹" onClick={() => navigate('/cleaning/new')} />
+            <QuickBtn label={t('New Batch')} icon="🍬" onClick={() => setActiveModal('newBatch')} />
+            <QuickBtn label={t('Receive Stock')} icon="📦" onClick={() => setActiveModal('receiveInventory')} />
+            <QuickBtn label={t('Cleaning Log')} icon="🧹" onClick={() => setActiveModal('cleaning')} />
           </div>
         </div>
       </div>
@@ -247,6 +255,31 @@ export default function Dashboard() {
           navigate={navigate}
           onComplete={load}
         />
+      )}
+
+      {/* Modals */}
+      {activeModal === 'cleaning' && (
+        <Modal title={t('New Cleaning Log')} onClose={() => setActiveModal(null)}>
+          <NewCleaningLog onClose={() => setActiveModal(null)} />
+        </Modal>
+      )}
+      {activeModal === 'newBatch' && (
+        <Modal title={t('New Work Order')} onClose={() => setActiveModal(null)} maxWidth={560}>
+          <BatchForm onClose={() => setActiveModal(null)} onCreated={() => setActiveModal(null)} />
+        </Modal>
+      )}
+      {activeModal === 'receiveInventory' && (
+        <SlideOver title={t('Receive Inventory')} onClose={() => setActiveModal(null)}>
+          <ReceiveInventory onClose={() => setActiveModal(null)} />
+        </SlideOver>
+      )}
+      {(activeModal === 'daily_facility' || activeModal === 'pre_operational') && (
+        <SlideOver
+          title={activeModal === 'daily_facility' ? t('Daily Facility Inspection') : t('Pre-Operational Inspection')}
+          onClose={() => { setActiveModal(null); load() }}
+        >
+          <StartInspection type={activeModal} onClose={() => { setActiveModal(null); load() }} />
+        </SlideOver>
       )}
     </div>
   )
@@ -488,7 +521,7 @@ function QuickBtn({ label, icon, onClick }) {
   )
 }
 
-function TaskRow({ done, label, path, navigate }) {
+function TaskRow({ done, label, path, navigate, onStart }) {
   const { t } = useTranslation()
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0', borderBottom: '1px solid #f3f4f6' }}>
@@ -496,7 +529,7 @@ function TaskRow({ done, label, path, navigate }) {
         <span style={{ fontSize: '1rem' }}>{done ? '✅' : '⏳'}</span>
         <span style={{ fontSize: '0.875rem', color: done ? '#9ca3af' : '#111827', textDecoration: done ? 'line-through' : 'none' }}>{label}</span>
       </div>
-      {!done && <button style={startBtn} onClick={() => navigate(path)}>{t('Start →')}</button>}
+      {!done && <button style={startBtn} onClick={onStart || (() => navigate(path))}>{t('Start →')}</button>}
     </div>
   )
 }

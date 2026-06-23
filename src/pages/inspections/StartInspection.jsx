@@ -10,8 +10,9 @@ import PhotoUpload from '../../components/PhotoUpload'
 import { card, btn, input, label } from '../../styles/common'
 import { useTranslation } from 'react-i18next'
 
-export default function StartInspection() {
-  const { type } = useParams()
+export default function StartInspection({ type: typeProp, onClose }) {
+  const { type: typeParam } = useParams()
+  const type = typeProp || typeParam
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { currentUser } = useAuth()
@@ -167,7 +168,9 @@ export default function StartInspection() {
           {createdCAs.length > 0 && (
             <button style={btn.primary} onClick={() => navigate('/corrective-actions')}>{t('View Corrective Actions')}</button>
           )}
-          <button style={btn.secondary} onClick={() => navigate('/dashboard')}>{t('Back to Dashboard')}</button>
+          <button style={btn.secondary} onClick={() => onClose ? onClose() : navigate('/dashboard')}>
+            {onClose ? t('Done') : t('Back to Dashboard')}
+          </button>
         </div>
       </div>
     </div>
@@ -256,7 +259,7 @@ export default function StartInspection() {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-        <button style={backBtn} onClick={() => navigate(-1)}>{t('← Back')}</button>
+        {!onClose && <button style={backBtn} onClick={() => navigate(-1)}>{t('← Back')}</button>}
         <h2 style={{ fontSize: '1.1rem', fontWeight: 700, flex: 1 }}>{title}</h2>
         <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>{t('{{answered}}/{{total}}', { answered: answeredCount, total: items.length })}</span>
       </div>

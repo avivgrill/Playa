@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 
 const STORAGE_LOCATIONS = ['Dry Storage', 'Refrigerator', 'QX Warehouse']
 
-export default function ReceiveInventory() {
+export default function ReceiveInventory({ onClose }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { t } = useTranslation()
@@ -193,7 +193,7 @@ export default function ReceiveInventory() {
             <button style={btn.secondary} onClick={() => setSuccess(null)}>
               {t('Receive Another')}
             </button>
-            <button style={btn.primary} onClick={() => navigate('/operations/lots')}>
+            <button style={btn.primary} onClick={() => { onClose?.(); navigate('/operations/lots') }}>
               {t('View All Lots')}
             </button>
           </div>
@@ -252,8 +252,8 @@ export default function ReceiveInventory() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/operations/lots')}>{t('← Ingredient Lots')}</button>
-      <h1 style={pageTitle}>{t('Receive Inventory')}</h1>
+      {!onClose && <button style={backBtn} onClick={() => navigate('/operations/lots')}>{t('← Ingredient Lots')}</button>}
+      {!onClose && <h1 style={pageTitle}>{t('Receive Inventory')}</h1>}
       <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1rem' }}>
         {t('Fill in what you know. Photo and notes are optional.')}
       </p>

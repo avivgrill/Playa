@@ -7,7 +7,7 @@ import { getNextBatchNumber } from '../../utils/batchNumber'
 import { card, btn, input, label } from '../../styles/common'
 import { useTranslation } from 'react-i18next'
 
-export default function BatchForm() {
+export default function BatchForm({ onClose, onCreated }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { t } = useTranslation()
@@ -88,7 +88,21 @@ export default function BatchForm() {
         createdBy: userInfo,
         auditLog: [{ action: 'created', changedBy: userInfo, changedAt: Timestamp.now() }],
       })
-      navigate(`/operations/batches/${docRef.id}`)
+      if (onCreated) {
+        onCreated({
+          id: docRef.id, batchNumber,
+          productName: form.productName.trim(),
+          sopId: form.sopId || null, sopName: form.sopName || null,
+          productionDate: Timestamp.fromDate(productionDate),
+          plannedQuantity: form.plannedQuantity ? Number(form.plannedQuantity) : 0,
+          quantityProduced: 0, unit: form.unit, status: form.status,
+          clientOrderId: form.clientOrderId || '', clientOrderNumber: form.clientOrderNumber || '',
+          notes: form.notes,
+        })
+        onClose?.()
+      } else {
+        navigate(`/operations/batches/${docRef.id}`)
+      }
     } catch (err) {
       alert(`Save failed: ${err.message}`)
       setSaving(false)
@@ -97,10 +111,10 @@ export default function BatchForm() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/operations/batches')}>{t('← Work Orders')}</button>
-      <h1 style={pageTitle}>{t('New Work Order')}</h1>
+      {!onClose && <button style={backBtn} onClick={() => navigate('/operations/batches')}>{t('← Work Orders')}</button>}
+      {!onClose && <h1 style={pageTitle}>{t('New Work Order')}</h1>}
 
-      <form onSubmit={handleSubmit} style={card}>
+      <form onSubmit={handleSubmit} style={onClose ? {} : card}>
         {clientOrders.length > 0 && (
           <>
             <label style={label}>{t('Client Order (optional)')}</label>
@@ -166,7 +180,7 @@ export default function BatchForm() {
           <button type="submit" style={btn.primary} disabled={saving}>
             {saving ? t('Creating…') : t('Create Work Order')}
           </button>
-          <button type="button" style={btn.secondary} onClick={() => navigate('/operations/batches')}>
+          <button type="button" style={btn.secondary} onClick={() => onClose ? onClose() : navigate('/operations/batches')}>
             {t('Cancel')}
           </button>
         </div>

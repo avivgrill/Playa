@@ -4,6 +4,10 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { todayString } from '../utils/format'
 import { useTranslation } from 'react-i18next'
+import Modal from '../components/Modal'
+import SlideOver from '../components/SlideOver'
+import NewCleaningLog from './cleaning/NewCleaningLog'
+import StartInspection from './inspections/StartInspection'
 
 function weekBounds() {
   const now = new Date()
@@ -29,6 +33,8 @@ export default function ComplianceLanding() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [status, setStatus] = useState(null)
+  const [activeModal, setActiveModal] = useState(null)
+  // null | 'cleaning' | 'daily_facility' | 'pre_operational' | 'weekly_facility' | 'monthly_facility'
 
   useEffect(() => {
     async function load() {
@@ -71,12 +77,49 @@ export default function ComplianceLanding() {
     load()
   }, [])
 
-  function go(type, done, id) {
+  function handleInspectionClick(type, done, id) {
     if (done && id) {
       navigate(`/inspections/${id}`)
     } else {
-      navigate(`/inspections/new/${type}`)
+      setActiveModal(type)
     }
+  }
+
+  function handleModalClose() {
+    setActiveModal(null)
+    // Re-load status after form submission to reflect updated state
+    setStatus(null)
+    // Trigger re-fetch
+    ;(async () => {
+      const today = todayString()
+      const [wStart, wEnd] = weekBounds()
+      const [mStart, mEnd] = monthBounds()
+      const [dailySnap, preOpSnap, weeklySnap, monthlySnap, casSnap] = await Promise.all([
+        getDocs(query(collection(db, 'inspections'), where('type', '==', 'daily_facility'), where('date', '==', today))),
+        getDocs(query(collection(db, 'inspections'), where('type', '==', 'pre_operational'), where('date', '==', today))),
+        getDocs(query(collection(db, 'inspections'), where('type', '==', 'weekly_facility'))),
+        getDocs(query(collection(db, 'inspections'), where('type', '==', 'monthly_facility'))),
+        getDocs(query(collection(db, 'correctiveActions'), where('status', 'in', ['open', 'in_progress']))),
+      ])
+      const weeklyDoc = weeklySnap.docs.find(d => { const dt = d.data().date; return dt >= wStart && dt <= wEnd })
+      const monthlyDoc = monthlySnap.docs.find(d => { const dt = d.data().date; return dt >= mStart && dt <= mEnd })
+      const openCAs = casSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      setStatus({
+        dailyDone: !dailySnap.empty, dailyId: dailySnap.docs[0]?.id || null,
+        preOpDone: !preOpSnap.empty, preOpId: preOpSnap.docs[0]?.id || null,
+        weeklyDone: !!weeklyDoc, weeklyId: weeklyDoc?.id || null,
+        monthlyDone: !!monthlyDoc, monthlyId: monthlyDoc?.id || null,
+        openCACount: openCAs.length,
+        overdueCACount: openCAs.filter(ca => ca.dueDate?.toDate() < new Date()).length,
+      })
+    })()
+  }
+
+  const INSPECTION_TITLES = {
+    daily_facility: t('Daily Facility Inspection'),
+    pre_operational: t('Pre-Operational Inspection'),
+    weekly_facility: t('Weekly Facility Inspection'),
+    monthly_facility: t('Monthly Facility Verification'),
   }
 
   return (
@@ -88,13 +131,13 @@ export default function ComplianceLanding() {
           label={t('Daily Facility Inspection')}
           done={status?.dailyDone}
           loading={!status}
-          onClick={() => status && go('daily_facility', status.dailyDone, status.dailyId)}
+          onClick={() => status && handleInspectionClick('daily_facility', status.dailyDone, status.dailyId)}
         />
         <InspectionRow
           label={t('Pre-Operational Inspection')}
           done={status?.preOpDone}
           loading={!status}
-          onClick={() => status && go('pre_operational', status.preOpDone, status.preOpId)}
+          onClick={() => status && handleInspectionClick('pre_operational', status.preOpDone, status.preOpId)}
         />
       </Section>
 
@@ -103,7 +146,7 @@ export default function ComplianceLanding() {
           label={t('Weekly Facility Inspection')}
           done={status?.weeklyDone}
           loading={!status}
-          onClick={() => status && go('weekly_facility', status.weeklyDone, status.weeklyId)}
+          onClick={() => status && handleInspectionClick('weekly_facility', status.weeklyDone, status.weeklyId)}
         />
       </Section>
 
@@ -112,7 +155,7 @@ export default function ComplianceLanding() {
           label={t('Monthly Facility Verification')}
           done={status?.monthlyDone}
           loading={!status}
-          onClick={() => status && go('monthly_facility', status.monthlyDone, status.monthlyId)}
+          onClick={() => status && handleInspectionClick('monthly_facility', status.monthlyDone, status.monthlyId)}
         />
       </Section>
 
@@ -120,7 +163,7 @@ export default function ComplianceLanding() {
         <ActionRow
           icon="🧹"
           label={t('New Cleaning Log')}
-          onClick={() => navigate('/cleaning/new')}
+          onClick={() => setActiveModal('cleaning')}
         />
         <ActionRow
           icon="⚠️"
@@ -136,6 +179,19 @@ export default function ComplianceLanding() {
           onClick={() => navigate('/corrective-actions')}
         />
       </Section>
+
+      {/* Modals */}
+      {activeModal === 'cleaning' && (
+        <Modal title={t('New Cleaning Log')} onClose={() => setActiveModal(null)}>
+          <NewCleaningLog onClose={() => setActiveModal(null)} />
+        </Modal>
+      )}
+
+      {activeModal && activeModal !== 'cleaning' && (
+        <SlideOver title={INSPECTION_TITLES[activeModal]} onClose={handleModalClose}>
+          <StartInspection type={activeModal} onClose={handleModalClose} />
+        </SlideOver>
+      )}
     </div>
   )
 }

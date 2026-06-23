@@ -9,6 +9,9 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import StartProductionModal from '../components/production/StartProductionModal'
+import WorkOrderSlideOver from '../components/production/WorkOrderSlideOver'
+import Modal from '../components/Modal'
+import BatchForm from './operations/BatchForm'
 
 const COLUMNS = [
   { key: 'backlog',       label: 'Backlog',      statuses: ['backlog', 'scheduled', 'hold'] },
@@ -26,13 +29,14 @@ function colForStatus(status) {
 }
 
 export default function ProductionLanding() {
-  const navigate = useNavigate()
   const { t } = useTranslation()
   const [batches, setBatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [advancing, setAdvancing] = useState(null)
   const [activeDragId, setActiveDragId] = useState(null)
   const [pendingMove, setPendingMove] = useState(null)
+  const [selectedBatch, setSelectedBatch] = useState(null)
+  const [showNewBatch, setShowNewBatch] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
@@ -114,6 +118,21 @@ export default function ProductionLanding() {
     setPendingMove(null)
   }
 
+  function handleBatchUpdated(updatedBatch) {
+    setBatches(prev => prev.map(b => b.id === updatedBatch.id ? updatedBatch : b))
+    // keep slide-over open with updated data
+    setSelectedBatch(updatedBatch)
+  }
+
+  function handleBatchCreated(newBatch) {
+    setBatches(prev => [...prev, newBatch])
+    setShowNewBatch(false)
+  }
+
+  function handleCardClick(batch) {
+    setSelectedBatch(batch)
+  }
+
   const activeBatch = activeDragId ? batches.find(b => b.id === activeDragId) : null
 
   return (
@@ -129,7 +148,7 @@ export default function ProductionLanding() {
             <Link to="/operations/sops" style={s.qLink}>{t('SOPs')}</Link>
           </div>
         </div>
-        <button style={s.newBtn} onClick={() => navigate('/operations/batches/new')}>
+        <button style={s.newBtn} onClick={() => setShowNewBatch(true)}>
           + {t('New Work Order')}
         </button>
       </div>
@@ -140,7 +159,10 @@ export default function ProductionLanding() {
         <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div style={s.board}>
             {COLUMNS.map(col => (
-              <KanbanColumn key={col.key} col={col} batches={colBatches(col)} advancing={advancing} onAdvance={advanceBatch} />
+              <KanbanColumn
+                key={col.key} col={col} batches={colBatches(col)}
+                advancing={advancing} onAdvance={advanceBatch} onCardClick={handleCardClick}
+              />
             ))}
           </div>
           <DragOverlay>
@@ -156,11 +178,25 @@ export default function ProductionLanding() {
           onConfirmed={handleProductionStarted}
         />
       )}
+
+      {selectedBatch && (
+        <WorkOrderSlideOver
+          batch={selectedBatch}
+          onClose={() => setSelectedBatch(null)}
+          onUpdated={handleBatchUpdated}
+        />
+      )}
+
+      {showNewBatch && (
+        <Modal title={t('New Work Order')} onClose={() => setShowNewBatch(false)} maxWidth={560}>
+          <BatchForm onClose={() => setShowNewBatch(false)} onCreated={handleBatchCreated} />
+        </Modal>
+      )}
     </div>
   )
 }
 
-function KanbanColumn({ col, batches, advancing, onAdvance }) {
+function KanbanColumn({ col, batches, advancing, onAdvance, onCardClick }) {
   const { t } = useTranslation()
   const { setNodeRef } = useDroppable({ id: col.key })
   const color = COL_COLOR[col.key]
@@ -173,7 +209,11 @@ function KanbanColumn({ col, batches, advancing, onAdvance }) {
       <SortableContext items={batches.map(b => b.id)} strategy={verticalListSortingStrategy}>
         <div ref={setNodeRef} style={s.colBody}>
           {batches.map(batch => (
-            <SortableCard key={batch.id} batch={batch} canAdvance={!!STATUS_NEXT[batch.status]} advancing={advancing === batch.id} onAdvance={() => onAdvance(batch)} />
+            <SortableCard
+              key={batch.id} batch={batch}
+              canAdvance={!!STATUS_NEXT[batch.status]} advancing={advancing === batch.id}
+              onAdvance={() => onAdvance(batch)} onCardClick={onCardClick}
+            />
           ))}
           {batches.length === 0 && <div style={s.empty}>—</div>}
         </div>
@@ -182,21 +222,20 @@ function KanbanColumn({ col, batches, advancing, onAdvance }) {
   )
 }
 
-function SortableCard({ batch, canAdvance, advancing, onAdvance }) {
+function SortableCard({ batch, canAdvance, advancing, onAdvance, onCardClick }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: batch.id })
   return (
     <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.3 : 1 }} {...attributes} {...listeners}>
-      <BatchCard batch={batch} canAdvance={canAdvance} advancing={advancing} onAdvance={onAdvance} />
+      <BatchCard batch={batch} canAdvance={canAdvance} advancing={advancing} onAdvance={onAdvance} onCardClick={onCardClick} />
     </div>
   )
 }
 
-function BatchCard({ batch, canAdvance, advancing, onAdvance }) {
-  const navigate = useNavigate()
+function BatchCard({ batch, canAdvance, advancing, onAdvance, onCardClick }) {
   const { t } = useTranslation()
   const isHold = batch.status === 'hold'
   return (
-    <div style={s.card} onClick={() => navigate(`/operations/batches/${batch.id}`)}>
+    <div style={s.card} onClick={() => onCardClick(batch)}>
       <div style={s.batchNum}>{batch.batchNumber}</div>
       <div style={s.productName}>{batch.productName}</div>
       {(batch.quantityProduced > 0 || batch.sopName) && (

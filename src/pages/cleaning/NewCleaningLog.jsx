@@ -8,7 +8,7 @@ import { card, btn, input, label } from '../../styles/common'
 import { useTranslation } from 'react-i18next'
 import TranslateButton from '../../components/TranslateButton'
 
-export default function NewCleaningLog() {
+export default function NewCleaningLog({ onClose }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { currentUser } = useAuth()
@@ -40,7 +40,7 @@ export default function NewCleaningLog() {
         verification: null,
         auditLog: [{ action: 'created', changedBy: userInfo, changedAt: Timestamp.now(), changes: {} }],
       })
-      navigate('/cleaning')
+      onClose ? onClose() : navigate('/cleaning')
     } catch (err) {
       console.error(err)
       alert('Error saving. Please try again.')
@@ -49,11 +49,11 @@ export default function NewCleaningLog() {
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }}>
-      <button style={backBtn} onClick={() => navigate('/cleaning')}>{t('← Cleaning History')}</button>
-      <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>{t('New Cleaning Log')}</h1>
+    <div style={onClose ? {} : { maxWidth: 560, margin: '0 auto' }}>
+      {!onClose && <button style={backBtn} onClick={() => navigate('/cleaning')}>{t('← Cleaning History')}</button>}
+      {!onClose && <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>{t('New Cleaning Log')}</h1>}
 
-      <form onSubmit={handleSubmit} style={card}>
+      <form onSubmit={handleSubmit} style={onClose ? {} : card}>
         <Field label={t('Area *')} value={form.area} onChange={set('area')} placeholder={t('e.g. Kitchen, Mixing Room')} />
         <Field label={t('Equipment *')} value={form.equipment} onChange={set('equipment')} placeholder={t('e.g. Mixer, Kettle, Conveyor')} />
         <Field label={t('Chemical Used *')} value={form.chemical} onChange={set('chemical')} placeholder={t('e.g. Sanidate, Bleach solution')} />
