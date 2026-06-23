@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { collection, getDocs, orderBy, query, doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
 import { formatDateTime } from '../../utils/format'
 import { card, badge, input, label, btn } from '../../styles/common'
 import { useTranslation } from 'react-i18next'
+import Modal from '../../components/Modal'
+import InspectionDetail from '../inspections/InspectionDetail'
+import CleaningDetail from '../cleaning/CleaningDetail'
+import CorrectiveActionDetail from '../correctiveActions/CorrectiveActionDetail'
 
 const ADMIN_EMAIL = 'avivgrill@gmail.com'
 
 export default function Records() {
-  const navigate = useNavigate()
   const { t } = useTranslation()
   const { currentUser } = useAuth()
   const isAdmin = currentUser?.email === ADMIN_EMAIL
@@ -25,6 +27,9 @@ export default function Records() {
   // Easter egg
   const [beeTaps, setBeeTaps] = useState(0)
   const [editMode, setEditMode] = useState(false)
+
+  // View record modal
+  const [viewRecord, setViewRecord] = useState(null)
 
   // Edit modal
   const [editRecord, setEditRecord] = useState(null)
@@ -168,7 +173,7 @@ export default function Records() {
       {loading ? <p style={{ color: '#9ca3af' }}>{t('Loading…')}</p> : filtered.length === 0 ? (
         <p style={{ color: '#9ca3af', textAlign: 'center', marginTop: '2rem' }}>{t('No records match your filters.')}</p>
       ) : filtered.map(r => (
-        <div key={`${r._type}-${r.id}`} style={{ ...card, cursor: 'pointer' }} onClick={() => navigate(pathFor(r))}>
+        <div key={`${r._type}-${r.id}`} style={{ ...card, cursor: 'pointer' }} onClick={() => !editMode && setViewRecord({ type: r._type, id: r.id })}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
@@ -206,6 +211,15 @@ export default function Records() {
             🐝
           </span>
         </div>
+      )}
+
+      {/* View record modal */}
+      {viewRecord && (
+        <Modal onClose={() => setViewRecord(null)} maxWidth={640}>
+          {viewRecord.type === 'inspection' && <InspectionDetail id={viewRecord.id} onClose={() => setViewRecord(null)} />}
+          {viewRecord.type === 'cleaningLog' && <CleaningDetail id={viewRecord.id} onClose={() => setViewRecord(null)} />}
+          {viewRecord.type === 'correctiveAction' && <CorrectiveActionDetail id={viewRecord.id} onClose={() => setViewRecord(null)} />}
+        </Modal>
       )}
 
       {/* Edit modal */}
@@ -312,12 +326,6 @@ function statusOf(r) {
   if (r._type === 'inspection')       return r.overallResult || 'completed'
   if (r._type === 'cleaningLog')      return r.verificationStatus || 'pending'
   return r.status || 'open'
-}
-
-function pathFor(r) {
-  if (r._type === 'inspection')       return `/inspections/${r.id}`
-  if (r._type === 'cleaningLog')      return `/cleaning/${r.id}`
-  return `/corrective-actions/${r.id}`
 }
 
 function typePill(type) {

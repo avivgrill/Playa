@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { useTranslation } from 'react-i18next'
-import SlideOver from '../components/SlideOver'
+import Modal from '../components/Modal'
 import ReceiveInventory from './operations/ReceiveInventory'
 
 export default function InventoryLanding() {
@@ -52,9 +52,9 @@ export default function InventoryLanding() {
       </div>
 
       {showReceive && (
-        <SlideOver title={t('Receive Inventory')} onClose={() => setShowReceive(false)}>
+        <Modal title={t('Receive Inventory')} onClose={() => setShowReceive(false)} maxWidth={560}>
           <ReceiveInventory onClose={() => setShowReceive(false)} />
-        </SlideOver>
+        </Modal>
       )}
     </div>
   )

@@ -7,8 +7,9 @@ import { formatDateTime } from '../../utils/format'
 import { card, btn, badge, input, label } from '../../styles/common'
 import { useTranslation } from 'react-i18next'
 
-export default function CleaningDetail() {
-  const { id } = useParams()
+export default function CleaningDetail({ id: idProp, onClose }) {
+  const { id: idParam } = useParams()
+  const id = idProp || idParam
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { currentUser } = useAuth()
@@ -50,7 +51,7 @@ export default function CleaningDetail() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/cleaning')}>{t('← Cleaning History')}</button>
+      {!onClose && <button style={backBtn} onClick={() => navigate('/cleaning')}>{t('← Cleaning History')}</button>}
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem', gap: '0.5rem' }}>
         <h1 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{log.area}</h1>

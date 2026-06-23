@@ -9,8 +9,9 @@ import { card, btn, badge, input, label } from '../../styles/common'
 import { useTranslation } from 'react-i18next'
 import TranslateButton from '../../components/TranslateButton'
 
-export default function CorrectiveActionDetail() {
-  const { id } = useParams()
+export default function CorrectiveActionDetail({ id: idProp, onClose }) {
+  const { id: idParam } = useParams()
+  const id = idProp || idParam
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { currentUser } = useAuth()
@@ -91,7 +92,7 @@ export default function CorrectiveActionDetail() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/corrective-actions')}>{t('← Corrective Actions')}</button>
+      {!onClose && <button style={backBtn} onClick={() => navigate('/corrective-actions')}>{t('← Corrective Actions')}</button>}
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem', gap: '0.5rem', flexWrap: 'wrap' }}>
         <div>

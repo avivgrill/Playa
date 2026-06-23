@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   collection, query, where, getDocs,
-  doc, getDoc, setDoc, addDoc, updateDoc,
-  serverTimestamp,
+  doc, addDoc, updateDoc,
+  serverTimestamp, Timestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { useAuth } from '../contexts/AuthContext'
@@ -12,11 +12,11 @@ import { getWeekStart, weekLabel, weekStartStr } from '../utils/timecard'
 import { card, badge, btn, input } from '../styles/common'
 import { useTranslation } from 'react-i18next'
 import Modal from '../components/Modal'
-import SlideOver from '../components/SlideOver'
 import NewCleaningLog from './cleaning/NewCleaningLog'
 import StartInspection from './inspections/StartInspection'
 import BatchForm from './operations/BatchForm'
 import ReceiveInventory from './operations/ReceiveInventory'
+import BatchDetail from './operations/BatchDetail'
 
 const STATUS_LABELS = {
   scheduled: 'Scheduled',
@@ -32,6 +32,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeModal, setActiveModal] = useState(null)
+  const [activeBatchId, setActiveBatchId] = useState(null)
   // null | 'cleaning' | 'newBatch' | 'receiveInventory' | 'daily_facility' | 'pre_operational'
 
   async function load() {
@@ -45,7 +46,6 @@ export default function Dashboard() {
       activeBatchSnap, scheduledBatchSnap, holdBatchSnap,
       holdLotsSnap,
       shoppingSnap,
-      reviewSettingsSnap, availableLotsSnap,
       remindersSnap,
     ] = await Promise.all([
       getDocs(query(collection(db, 'inspections'), where('type', '==', 'daily_facility'), where('date', '==', today))),
@@ -56,25 +56,12 @@ export default function Dashboard() {
       getDocs(query(collection(db, 'productionBatches'), where('status', '==', 'hold'))),
       getDocs(query(collection(db, 'ingredientLots'), where('status', '==', 'hold'))),
       getDocs(query(collection(db, 'shoppingList'), where('status', 'in', ['pending', 'ordered']))),
-      getDoc(doc(db, 'settings', 'inventoryReview')),
-      getDocs(query(collection(db, 'ingredientLots'), where('status', '==', 'available'))),
       getDocs(query(collection(db, 'reminders'), where('status', '==', 'open'))),
     ])
 
     const openCAs = openCASnap.docs.map(d => ({ id: d.id, ...d.data() }))
     const overdueCAs = openCAs.filter(ca => ca.dueDate && ca.dueDate.toDate() < now)
     const activeBatches = activeBatchSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-
-    const reviewSettings = reviewSettingsSnap.exists() ? reviewSettingsSnap.data() : null
-    const daysSinceReview = reviewSettings?.lastReviewedAt
-      ? Math.floor((now - reviewSettings.lastReviewedAt.toDate()) / (1000 * 60 * 60 * 24))
-      : null
-    const reviewDue = daysSinceReview === null || daysSinceReview >= 7
-
-    const availableLots = availableLotsSnap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(l => l.currentQuantity > 0)
-      .sort((a, b) => a.ingredientName.localeCompare(b.ingredientName))
 
     const shoppingItems = shoppingSnap.docs
       .map(d => ({ id: d.id, ...d.data() }))
@@ -111,9 +98,6 @@ export default function Dashboard() {
       shoppingItems,
       reminders,
       timecardDue,
-      reviewDue,
-      daysSinceReview,
-      availableLots,
     })
     setLoading(false)
   }
@@ -228,7 +212,7 @@ export default function Dashboard() {
             <button style={linkBtn} onClick={() => navigate('/operations/batches')}>{t('View All')}</button>
           </div>
           {[...data.activeBatches, ...data.scheduledBatches].map(b => (
-            <div key={b.id} onClick={() => navigate(`/operations/batches/${b.id}`)} style={rowStyle}>
+            <div key={b.id} onClick={() => setActiveBatchId(b.id)} style={rowStyle}>
               <div>
                 <span style={subLabel}>{b.batchNumber}</span>
                 <span style={rowLabel}>{b.productName}</span>
@@ -245,18 +229,6 @@ export default function Dashboard() {
         {!loading && <ShoppingList items={data.shoppingItems} currentUser={currentUser} onUpdate={load} />}
       </div>
 
-      {/* Zone 6: Inventory Review */}
-      {!loading && (
-        <InventoryReview
-          reviewDue={data.reviewDue}
-          daysSinceReview={data.daysSinceReview}
-          availableLots={data.availableLots}
-          currentUser={currentUser}
-          navigate={navigate}
-          onComplete={load}
-        />
-      )}
-
       {/* Modals */}
       {activeModal === 'cleaning' && (
         <Modal title={t('New Cleaning Log')} onClose={() => setActiveModal(null)}>
@@ -269,17 +241,23 @@ export default function Dashboard() {
         </Modal>
       )}
       {activeModal === 'receiveInventory' && (
-        <SlideOver title={t('Receive Inventory')} onClose={() => setActiveModal(null)}>
+        <Modal title={t('Receive Inventory')} onClose={() => setActiveModal(null)} maxWidth={560}>
           <ReceiveInventory onClose={() => setActiveModal(null)} />
-        </SlideOver>
+        </Modal>
       )}
       {(activeModal === 'daily_facility' || activeModal === 'pre_operational') && (
-        <SlideOver
+        <Modal
           title={activeModal === 'daily_facility' ? t('Daily Facility Inspection') : t('Pre-Operational Inspection')}
           onClose={() => { setActiveModal(null); load() }}
+          maxWidth={640}
         >
           <StartInspection type={activeModal} onClose={() => { setActiveModal(null); load() }} />
-        </SlideOver>
+        </Modal>
+      )}
+      {activeBatchId && (
+        <Modal onClose={() => setActiveBatchId(null)} maxWidth={720}>
+          <BatchDetail id={activeBatchId} onClose={() => setActiveBatchId(null)} />
+        </Modal>
       )}
     </div>
   )
@@ -445,71 +423,6 @@ function ShoppingList({ items, currentUser, onUpdate }) {
   )
 }
 
-// ── Inventory Review ──────────────────────────────────────────────────────────
-
-function InventoryReview({ reviewDue, daysSinceReview, availableLots, currentUser, navigate, onComplete }) {
-  const { t } = useTranslation()
-  const [completing, setCompleting] = useState(false)
-
-  async function markComplete() {
-    setCompleting(true)
-    try {
-      await setDoc(doc(db, 'settings', 'inventoryReview'), {
-        lastReviewedAt: serverTimestamp(),
-        lastReviewedBy: { uid: currentUser.uid, displayName: currentUser.displayName || currentUser.email, email: currentUser.email },
-      })
-      await onComplete()
-    } catch (err) { alert(`Failed: ${err.message}`) }
-    setCompleting(false)
-  }
-
-  return (
-    <div style={{ ...card, borderLeft: `4px solid ${reviewDue ? '#f59e0b' : '#e5e7eb'}` }}>
-      <div style={cardHeader}>
-        <h2 style={{ ...sectionTitle, marginBottom: 0 }}>{t('Inventory Review')}</h2>
-        {reviewDue
-          ? <span style={dueBadge}>{t('DUE')}</span>
-          : <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-              {daysSinceReview === 0 ? t('Reviewed today') : t('{{days}}d ago', { days: daysSinceReview })}
-            </span>
-        }
-      </div>
-      {reviewDue ? (
-        <>
-          <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0.5rem 0 0.75rem' }}>
-            {t('Walk the floor and verify quantities. Tap a lot to adjust if needed.')}
-          </p>
-          {availableLots.length === 0
-            ? <p style={muted}>{t('No inventory on hand.')}</p>
-            : availableLots.map(lot => (
-                <div key={lot.id} onClick={() => navigate(`/operations/lots/${lot.id}`)} style={rowStyle}>
-                  <div>
-                    <span style={rowLabel}>{lot.ingredientName}</span>
-                    <span style={subLabel}>{lot.internalLotNumber} · {lot.storageLocation}</span>
-                  </div>
-                  <span style={{ fontWeight: 700, color: '#1d4ed8', fontSize: '0.9rem' }}>
-                    {lot.currentQuantity.toLocaleString()} {lot.unit}
-                  </span>
-                </div>
-              ))
-          }
-          <button style={{ ...btn.success, width: '100%', marginTop: '0.75rem', fontSize: '0.95rem', padding: '0.75rem' }}
-            onClick={markComplete} disabled={completing}>
-            {completing ? t('Saving…') : t('✓ Mark Review Complete')}
-          </button>
-        </>
-      ) : (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.25rem' }}>
-          <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-            {availableLots.length === 1 ? t('{{count}} lot on hand', { count: availableLots.length }) : t('{{count}} lots on hand', { count: availableLots.length })}
-          </span>
-          <button style={linkBtn} onClick={() => navigate('/operations/lots')}>{t('View Lots')}</button>
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function QuickBtn({ label, icon, onClick }) {
@@ -584,14 +497,6 @@ const linkBtn = {
 const smBtn = {
   background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb',
   borderRadius: 6, padding: '0.25rem 0.6rem', fontSize: '0.75rem', cursor: 'pointer',
-}
-const logNeededBadge = {
-  fontSize: '0.7rem', background: '#fef3c7', color: '#92400e',
-  padding: '0.2rem 0.5rem', borderRadius: 4, fontWeight: 600,
-}
-const dueBadge = {
-  fontSize: '0.72rem', background: '#fef3c7', color: '#92400e',
-  padding: '0.2rem 0.5rem', borderRadius: 4, fontWeight: 600,
 }
 const orderedBadge = {
   fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af',

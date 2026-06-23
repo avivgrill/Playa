@@ -9,9 +9,9 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import StartProductionModal from '../components/production/StartProductionModal'
-import WorkOrderSlideOver from '../components/production/WorkOrderSlideOver'
 import Modal from '../components/Modal'
 import BatchForm from './operations/BatchForm'
+import BatchDetail from './operations/BatchDetail'
 
 const COLUMNS = [
   { key: 'backlog',       label: 'Backlog',      statuses: ['backlog', 'scheduled', 'hold'] },
@@ -120,7 +120,6 @@ export default function ProductionLanding() {
 
   function handleBatchUpdated(updatedBatch) {
     setBatches(prev => prev.map(b => b.id === updatedBatch.id ? updatedBatch : b))
-    // keep slide-over open with updated data
     setSelectedBatch(updatedBatch)
   }
 
@@ -180,11 +179,9 @@ export default function ProductionLanding() {
       )}
 
       {selectedBatch && (
-        <WorkOrderSlideOver
-          batch={selectedBatch}
-          onClose={() => setSelectedBatch(null)}
-          onUpdated={handleBatchUpdated}
-        />
+        <Modal title={selectedBatch.batchNumber} onClose={() => setSelectedBatch(null)} maxWidth={720}>
+          <BatchDetail id={selectedBatch.id} onClose={() => setSelectedBatch(null)} />
+        </Modal>
       )}
 
       {showNewBatch && (

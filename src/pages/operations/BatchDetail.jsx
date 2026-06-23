@@ -12,8 +12,9 @@ import { useTranslation } from 'react-i18next'
 
 const STATUSES = ['backlog', 'queued', 'in_production', 'packaged', 'complete', 'hold']
 
-export default function BatchDetail() {
-  const { id } = useParams()
+export default function BatchDetail({ id: idProp, onClose }) {
+  const { id: idParam } = useParams()
+  const id = idProp || idParam
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { currentUser } = useAuth()
@@ -182,7 +183,7 @@ export default function BatchDetail() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/production')}>{t('← Production')}</button>
+      {!onClose && <button style={backBtn} onClick={() => navigate('/production')}>{t('← Production')}</button>}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem', gap: '0.5rem' }}>
         <div>

@@ -6,8 +6,9 @@ import { formatDateTime } from '../../utils/format'
 import { card, badge } from '../../styles/common'
 import { useTranslation } from 'react-i18next'
 
-export default function InspectionDetail() {
-  const { id } = useParams()
+export default function InspectionDetail({ id: idProp, onClose }) {
+  const { id: idParam } = useParams()
+  const id = idProp || idParam
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [insp, setInsp] = useState(null)
@@ -33,7 +34,7 @@ export default function InspectionDetail() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/inspections')}>{t('← Inspection History')}</button>
+      {!onClose && <button style={backBtn} onClick={() => navigate('/inspections')}>{t('← Inspection History')}</button>}
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem', gap: '0.5rem' }}>
         <h1 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{title}</h1>
