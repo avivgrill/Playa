@@ -105,12 +105,7 @@ export default function FinishedGoodsLotDetail() {
             {t('View Work Order →')}
           </button>
         )}
-        {lot.productionRunId && (
-          <button style={linkBtn} onClick={() => navigate(`/operations/logs/${lot.productionRunId}`)}>
-            {t('View Production Run →')}
-          </button>
-        )}
-        {lot.clientOrderId && (
+{lot.clientOrderId && (
           <button style={linkBtn} onClick={() => navigate(`/operations/client-orders/${lot.clientOrderId}`)}>
             {t('View Client Order →')}
           </button>

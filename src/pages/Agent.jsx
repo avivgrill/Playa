@@ -117,20 +117,6 @@ async function executeAction(action, currentUser, isAdmin) {
       })
       return { label: `SOP ${sopNumber} — ${d.name}`, navigateTo: `/operations/sops/${r.id}` }
     }
-    case 'create_production_log': {
-      const d = action.data
-      const startTime = d.startTime ? new Date(d.startTime) : new Date()
-      const endTime = d.endTime ? new Date(d.endTime) : null
-      const r = await addDoc(collection(db, 'productionLogs'), {
-        batchId: d.batchId || '', batchNumber: d.batchNumber || '', productName: d.productName || '',
-        sopId: d.sopId || '', sopName: d.sopName || '', operator: d.operator || userInfo.displayName,
-        startTime: Timestamp.fromDate(startTime), endTime: endTime ? Timestamp.fromDate(endTime) : null,
-        equipment: d.equipment || '', notes: d.notes || '', deviations: d.deviations || '',
-        signature: { signedBy: userInfo.displayName, signedAt: now },
-        createdAt: serverTimestamp(), createdBy: userInfo, auditLog: [{ action: 'created', changedBy: userInfo, changedAt: now }]
-      })
-      return { label: `Production Log — ${d.productName || d.batchNumber}`, navigateTo: `/operations/logs/${r.id}` }
-    }
     case 'create_cleaning_log': {
       const d = action.data
       const r = await addDoc(collection(db, 'cleaningLogs'), {
@@ -228,19 +214,6 @@ async function executeAction(action, currentUser, isAdmin) {
         auditLog: [{ action: 'edited via AI agent', changedBy: userInfo, changedAt: now, changes: updates }]
       })
       return { label: `Edited Cleaning Log`, navigateTo: `/cleaning/${d.logId}` }
-    }
-
-    case 'edit_production_log': {
-      if (!isAdmin) throw new Error('Admin access required to edit records.')
-      const d = action.data
-      if (!d.logId) throw new Error('Could not identify which production log to edit — logId is missing.')
-      const updates = {}
-      ;['notes','deviations','endTime'].forEach(k => { if (d[k] !== undefined) updates[k] = d[k] })
-      await updateDoc(doc(db, 'productionLogs', d.logId), {
-        ...updates, updatedAt: serverTimestamp(),
-        auditLog: [{ action: 'edited via AI agent', changedBy: userInfo, changedAt: now, changes: updates }]
-      })
-      return { label: `Edited Production Log`, navigateTo: `/operations/logs/${d.logId}` }
     }
 
     case 'edit_log': {

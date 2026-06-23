@@ -26,7 +26,6 @@ export default function BatchDetail() {
   }
 
   const [batch, setBatch] = useState(null)
-  const [logs, setLogs] = useState([])
   const [allocations, setAllocations] = useState([])
   const [customers, setCustomers] = useState([])
   const [usageRecords, setUsageRecords] = useState([])
@@ -49,14 +48,12 @@ export default function BatchDetail() {
   const [updatingStatus, setUpdatingStatus] = useState(false)
 
   async function load() {
-    const [batchSnap, logsSnap, allocSnap, usageSnap] = await Promise.all([
+    const [batchSnap, allocSnap, usageSnap] = await Promise.all([
       getDoc(doc(db, 'productionBatches', id)),
-      getDocs(query(collection(db, 'productionLogs'), where('batchId', '==', id))),
       getDocs(query(collection(db, 'batchAllocations'), where('batchId', '==', id))),
       getDocs(query(collection(db, 'ingredientUsage'), where('batchId', '==', id))),
     ])
     if (batchSnap.exists()) setBatch({ id: batchSnap.id, ...batchSnap.data() })
-    setLogs(logsSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.date?.toMillis?.() || b.startTime?.toMillis?.() || 0) - (a.date?.toMillis?.() || a.startTime?.toMillis?.() || 0)))
     setAllocations(allocSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.allocationDate?.toDate?.() || 0) - (a.allocationDate?.toDate?.() || 0)))
     setUsageRecords(usageSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.usedAt?.toDate?.() || 0) - (a.usedAt?.toDate?.() || 0)))
     setLoading(false)
@@ -185,7 +182,7 @@ export default function BatchDetail() {
 
   return (
     <div>
-      <button style={backBtn} onClick={() => navigate('/operations/batches')}>{t('← Work Orders')}</button>
+      <button style={backBtn} onClick={() => navigate('/production')}>{t('← Production')}</button>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem', gap: '0.5rem' }}>
         <div>
@@ -209,7 +206,6 @@ export default function BatchDetail() {
         {[
           ['overview', t('Overview')],
           ['ingredients', `${t('Ingredients')} (${usageRecords.length})`],
-          ['logs', `${t('Production Runs')} (${logs.length})`],
           ['allocations', `${t('Allocations')} (${allocations.length})`],
         ].map(([key, lbl]) => (
           <button key={key}
@@ -249,9 +245,6 @@ export default function BatchDetail() {
               <p style={{ fontSize: '0.9rem', color: '#374151', margin: 0 }}>{batch.notes}</p>
             </div>
           )}
-          <button style={btn.primary} onClick={() => navigate(`/operations/logs/new?batchId=${id}`)}>
-            {t('+ New Production Run')}
-          </button>
         </div>
       )}
 
@@ -354,32 +347,6 @@ export default function BatchDetail() {
                 </div>
                 <div style={{ fontWeight: 700, color: '#1d4ed8', textAlign: 'right', flexShrink: 0 }}>
                   {u.quantityUsed} {u.unit}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Production Runs ── */}
-      {tab === 'logs' && (
-        <div>
-          <button style={{ ...btn.primary, marginBottom: '1rem' }} onClick={() => navigate(`/operations/logs/new?batchId=${id}`)}>
-            {t('+ New Production Run')}
-          </button>
-          {logs.length === 0 && <p style={muted}>{t('No production runs yet.')}</p>}
-          {logs.map(log => (
-            <div key={log.id} style={{ ...card, cursor: 'pointer' }} onClick={() => navigate(`/operations/logs/${log.id}`)}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
-                <div>
-                  <div style={{ fontWeight: 600, color: '#374151' }}>{log.operator || '—'}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
-                    {formatDate(log.date || log.startTime)}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  {log.signature?.signedBy && <span style={badge.verified}>{t('Signed')}</span>}
-                  {log.deviations && <span style={badge.hold}>{t('Deviation')}</span>}
                 </div>
               </div>
             </div>

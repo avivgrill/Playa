@@ -19,9 +19,6 @@ import SOPDetail from './pages/operations/SOPDetail'
 import BatchList from './pages/operations/BatchList'
 import BatchForm from './pages/operations/BatchForm'
 import BatchDetail from './pages/operations/BatchDetail'
-import ProductionLogList from './pages/operations/ProductionLogList'
-import ProductionLogForm from './pages/operations/ProductionLogForm'
-import ProductionLogDetail from './pages/operations/ProductionLogDetail'
 import CustomerList from './pages/operations/CustomerList'
 import CustomerForm from './pages/operations/CustomerForm'
 import CustomerDetail from './pages/operations/CustomerDetail'
@@ -78,9 +75,9 @@ export default function App() {
             <Route path="operations/batches" element={<BatchList />} />
             <Route path="operations/batches/new" element={<BatchForm />} />
             <Route path="operations/batches/:id" element={<BatchDetail />} />
-            <Route path="operations/logs" element={<ProductionLogList />} />
-            <Route path="operations/logs/new" element={<ProductionLogForm />} />
-            <Route path="operations/logs/:id" element={<ProductionLogDetail />} />
+            <Route path="operations/logs" element={<Navigate to="/production" replace />} />
+            <Route path="operations/logs/new" element={<Navigate to="/production" replace />} />
+            <Route path="operations/logs/:id" element={<Navigate to="/production" replace />} />
             <Route path="operations/customers" element={<CustomerList />} />
             <Route path="operations/customers/new" element={<CustomerForm />} />
             <Route path="operations/customers/:id" element={<CustomerDetail />} />

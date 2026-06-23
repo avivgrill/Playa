@@ -70,10 +70,9 @@ export default function RecallTrace() {
 
     const batchIds = [...new Set(usageRecords.map(u => u.batchId).filter(Boolean))]
 
-    const [batchSnaps, allocationSnaps, productionRunSnaps] = await Promise.all([
+    const [batchSnaps, allocationSnaps] = await Promise.all([
       Promise.all(batchIds.map(bid => getDoc(doc(db, 'productionBatches', bid)))),
       Promise.all(batchIds.map(bid => getDocs(query(collection(db, 'batchAllocations'), where('batchId', '==', bid))))),
-      Promise.all(batchIds.map(bid => getDocs(query(collection(db, 'productionLogs'), where('batchId', '==', bid))))),
     ])
 
     const batchMap = {}
@@ -82,12 +81,9 @@ export default function RecallTrace() {
     const allAllocations = allocationSnaps.flatMap(snap => snap.docs.map(d => ({ id: d.id, ...d.data() })))
     const uniqueCustomers = [...new Map(allAllocations.map(a => [a.customerId, { id: a.customerId, name: a.customerName }])).values()]
 
-    const productionRuns = productionRunSnaps.flatMap(snap => snap.docs.map(d => ({ id: d.id, ...d.data() })))
-    const runIds = productionRuns.map(r => r.id)
-
-    // FG lots linked to these batches or runs
+    // FG lots linked to these batches
     const fgLotSnaps = await Promise.all(
-      [...new Set([...batchIds, ...runIds])].length > 0
+      batchIds.length > 0
         ? batchIds.map(bid => getDocs(query(collection(db, 'finishedGoodsLots'), where('workOrderId', '==', bid))))
         : []
     )
@@ -98,7 +94,7 @@ export default function RecallTrace() {
     const clientOrderSnaps = await Promise.all(clientOrderIds.map(id => getDoc(doc(db, 'clientOrders', id))))
     const clientOrders = clientOrderSnaps.filter(s => s.exists()).map(s => ({ id: s.id, ...s.data() }))
 
-    setTrace({ usageRecords, batches: batchMap, allocations: allAllocations, customers: uniqueCustomers, productionRuns, fgLots, clientOrders })
+    setTrace({ usageRecords, batches: batchMap, allocations: allAllocations, customers: uniqueCustomers, fgLots, clientOrders })
     setTraceLoading(false)
   }
 
@@ -228,7 +224,6 @@ export default function RecallTrace() {
                   <h2 style={sectionHead}>{t('Work Orders')} ({Object.keys(trace.batches).length})</h2>
                   {Object.values(trace.batches).map(batch => {
                     const batchUsage = trace.usageRecords.filter(u => u.batchId === batch.id)
-                    const batchRuns = trace.productionRuns.filter(r => r.batchId === batch.id)
                     const batchAllocs = trace.allocations.filter(a => a.batchId === batch.id)
                     return (
                       <div key={batch.id} style={{ ...card, borderLeft: '4px solid #1d4ed8' }}>
@@ -248,16 +243,6 @@ export default function RecallTrace() {
                             {t('Used')}: <strong>{u.quantityUsed} {u.unit}</strong> {t('on')} {formatDate(u.usedAt)}
                           </div>
                         ))}
-                        {batchRuns.length > 0 && (
-                          <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #f3f4f6' }}>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: '#9ca3af', marginBottom: '0.3rem' }}>{t('Production Runs')}</div>
-                            {batchRuns.map(r => (
-                              <div key={r.id} style={{ fontSize: '0.8rem', color: '#374151', padding: '0.15rem 0', cursor: 'pointer' }} onClick={() => navigate(`/operations/logs/${r.id}`)}>
-                                {formatDate(r.date || r.startTime)} · {r.operator} {r.actualQuantity ? `· ${r.actualQuantity} ${r.unit}` : ''}
-                              </div>
-                            ))}
-                          </div>
-                        )}
                         {batchAllocs.length > 0 && (
                           <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #f3f4f6' }}>
                             <div style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#9ca3af', marginBottom: '0.3rem' }}>{t('Customer Allocations')}</div>

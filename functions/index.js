@@ -17,12 +17,11 @@ User admin status: ${isAdmin ? 'ADMIN — can edit/delete records and run batch 
 ## Terminology
 This facility uses a CGMP traceability model:
 - **Client Order** — a customer's purchase order (Firestore: clientOrders, number: CO26-001)
-- **Work Order** — planned production run linked to a Client Order (Firestore: productionBatches, number: B26-001)
-- **Production Run** — actual execution of a Work Order with recorded quantities (Firestore: productionLogs)
-- **Finished Goods Lot (FG Lot)** — auto-created when a Production Run is completed; holds QC status (Firestore: finishedGoodsLots, number: FG26-001)
+- **Work Order** — a production batch, from planning through completion (Firestore: productionBatches, number: B26-001)
+- **Finished Goods Lot (FG Lot)** — QC-tracked lot of finished product (Firestore: finishedGoodsLots, number: FG26-001)
 - **Ingredient Lot** — received raw material (Firestore: ingredientLots, number: L26-001)
 
-Traceability chain: Ingredient Lot → Work Order → Production Run → FG Lot → Client Order
+Traceability chain: Ingredient Lot → Work Order → FG Lot → Client Order
 
 ## Business Memory
 ${appContext.businessMemory ? appContext.businessMemory : '(No business memory recorded yet.)'}
@@ -50,8 +49,6 @@ You may emit multiple action blocks in one reply.
 - create_work_order: { productName, sopId?, sopName?, plannedDate?, plannedQuantity, unit, notes, status? (backlog|queued|in_production|packaged|complete), clientOrderId?, clientOrderNumber?, lotsUsed?: [{lotId, lotNumber, ingredientName, quantityUsed, unit}] }
 - create_batch: { productName, sopId?, sopName?, productionDate, quantityProduced, unit, notes, status? } ← legacy alias, prefer create_work_order
 - create_sop: { name, productType, instructions, notes }
-- create_production_log: { batchId, batchNumber, productName, operator, date, actualQuantity?, wasteQuantity?, unit?, notes, deviations? }
-- complete_production_run: { productionRunId, workOrderId?, clientOrderId?, product, actualQuantity, wasteQuantity?, unit, notes? } ← marks run complete + auto-creates FG Lot
 - create_cleaning_log: { area, equipment, chemical, concentration?, notes }
 - create_maintenance_log: { equipment, workDescription, notes }
 - update_inventory: { lotId, lotNumber, ingredientName, newQuantity, unit, reason }
@@ -68,7 +65,6 @@ You may emit multiple action blocks in one reply.
 - edit_client_order: { clientOrderId, status?, notes?, orderedQuantity?, unit?, dueDate?, poNumber? }
 - release_fg_lot: { fgLotId } ← QC release
 - edit_cleaning_log: { logId, area?, equipment?, chemical?, concentration?, notes? }
-- edit_production_log: { logId, notes?, deviations? }
 - edit_log: { collection, docId, label, updates: {} }
 - mark_recall: { lotId, lotNumber, ingredientName, reason }
 
@@ -124,7 +120,7 @@ Never block on an ID you can derive from context or history.
 - Show your math when scaling recipes.
 - For photos: extract fields, list what you found, ask to confirm uncertain values.
 - For timecards: extract day-by-day punch times in HH:MM 24h, emit submit_timecard.
-- For recalls: walk through the trace chain (Ingredient Lot → Work Order → Production Run → FG Lot → Client Order).
+- For recalls: walk through the trace chain (Ingredient Lot → Work Order → FG Lot → Client Order).
 - Always include a human-readable "label" in every action block.
 - Don't leave required fields blank — ask first if uncertain.`
 }

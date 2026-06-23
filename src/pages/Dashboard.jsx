@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   collection, query, where, getDocs,
   doc, getDoc, setDoc, addDoc, updateDoc,
-  serverTimestamp, Timestamp,
+  serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { useAuth } from '../contexts/AuthContext'
@@ -35,7 +35,6 @@ export default function Dashboard() {
     const [
       dailySnap, preOpSnap, openCASnap,
       activeBatchSnap, scheduledBatchSnap, holdBatchSnap,
-      todayLogsSnap,
       holdLotsSnap,
       shoppingSnap,
       reviewSettingsSnap, availableLotsSnap,
@@ -47,7 +46,6 @@ export default function Dashboard() {
       getDocs(query(collection(db, 'productionBatches'), where('status', '==', 'in_production'))),
       getDocs(query(collection(db, 'productionBatches'), where('status', '==', 'scheduled'))),
       getDocs(query(collection(db, 'productionBatches'), where('status', '==', 'hold'))),
-      getDocs(query(collection(db, 'productionLogs'), where('startTime', '>=', Timestamp.fromDate(todayStart)))),
       getDocs(query(collection(db, 'ingredientLots'), where('status', '==', 'hold'))),
       getDocs(query(collection(db, 'shoppingList'), where('status', 'in', ['pending', 'ordered']))),
       getDoc(doc(db, 'settings', 'inventoryReview')),
@@ -58,8 +56,6 @@ export default function Dashboard() {
     const openCAs = openCASnap.docs.map(d => ({ id: d.id, ...d.data() }))
     const overdueCAs = openCAs.filter(ca => ca.dueDate && ca.dueDate.toDate() < now)
     const activeBatches = activeBatchSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-    const todayLogBatchIds = new Set(todayLogsSnap.docs.map(d => d.data().batchId))
-    const batchesNeedingLog = new Set(activeBatches.filter(b => !todayLogBatchIds.has(b.id)).map(b => b.id))
 
     const reviewSettings = reviewSettingsSnap.exists() ? reviewSettingsSnap.data() : null
     const daysSinceReview = reviewSettings?.lastReviewedAt
@@ -103,7 +99,6 @@ export default function Dashboard() {
       activeBatches,
       scheduledBatches: scheduledBatchSnap.docs.map(d => ({ id: d.id, ...d.data() })),
       holdBatches: holdBatchSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-      batchesNeedingLog,
       holdLots: holdLotsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
       shoppingItems,
       reminders,
@@ -212,7 +207,6 @@ export default function Dashboard() {
           <div className="form-row" style={{ gap: '0.5rem' }}>
             <QuickBtn label={t('New Batch')} icon="🍬" onClick={() => navigate('/operations/batches/new')} />
             <QuickBtn label={t('Receive Stock')} icon="📦" onClick={() => navigate('/operations/receive')} />
-            <QuickBtn label={t('Log Run')} icon="📋" onClick={() => navigate('/operations/logs/new')} />
             <QuickBtn label={t('Cleaning Log')} icon="🧹" onClick={() => navigate('/cleaning/new')} />
           </div>
         </div>
@@ -225,21 +219,15 @@ export default function Dashboard() {
             <h2 style={{ ...sectionTitle, marginBottom: 0 }}>{t('Active Batches')}</h2>
             <button style={linkBtn} onClick={() => navigate('/operations/batches')}>{t('View All')}</button>
           </div>
-          {[...data.activeBatches, ...data.scheduledBatches].map(b => {
-            const needsLog = data.batchesNeedingLog.has(b.id)
-            return (
-              <div key={b.id} onClick={() => navigate(`/operations/batches/${b.id}`)} style={rowStyle}>
-                <div>
-                  <span style={subLabel}>{b.batchNumber}</span>
-                  <span style={rowLabel}>{b.productName}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  {needsLog && <span style={logNeededBadge}>{t('Log needed')}</span>}
-                  <span style={badge[b.status] || badge.pending}>{STATUS_LABELS[b.status] || b.status}</span>
-                </div>
+          {[...data.activeBatches, ...data.scheduledBatches].map(b => (
+            <div key={b.id} onClick={() => navigate(`/operations/batches/${b.id}`)} style={rowStyle}>
+              <div>
+                <span style={subLabel}>{b.batchNumber}</span>
+                <span style={rowLabel}>{b.productName}</span>
               </div>
-            )
-          })}
+              <span style={badge[b.status] || badge.pending}>{STATUS_LABELS[b.status] || b.status}</span>
+            </div>
+          ))}
         </div>
       )}
 

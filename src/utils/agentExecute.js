@@ -99,20 +99,6 @@ export async function executeAction(action, currentUser, isAdmin) {
       })
       return { label: `SOP ${sopNumber} — ${d.name}`, navigateTo: `/operations/sops/${r.id}` }
     }
-    case 'create_production_log': {
-      const d = action.data
-      const startTime = d.startTime ? new Date(d.startTime) : new Date()
-      const endTime = d.endTime ? new Date(d.endTime) : null
-      const r = await addDoc(collection(db, 'productionLogs'), {
-        batchId: d.batchId || '', batchNumber: d.batchNumber || '', productName: d.productName || '',
-        sopId: d.sopId || '', sopName: d.sopName || '', operator: d.operator || userInfo.displayName,
-        startTime: Timestamp.fromDate(startTime), endTime: endTime ? Timestamp.fromDate(endTime) : null,
-        equipment: d.equipment || '', notes: d.notes || '', deviations: d.deviations || '',
-        signature: { signedBy: userInfo.displayName, signedAt: now },
-        createdAt: serverTimestamp(), createdBy: userInfo, auditLog: [{ action: 'created', changedBy: userInfo, changedAt: now }]
-      })
-      return { label: `Production Log — ${d.productName || d.batchNumber}`, navigateTo: `/operations/logs/${r.id}` }
-    }
     case 'create_cleaning_log': {
       const d = action.data
       const r = await addDoc(collection(db, 'cleaningLogs'), {
@@ -209,18 +195,6 @@ export async function executeAction(action, currentUser, isAdmin) {
       })
       return { label: `Edited Cleaning Log`, navigateTo: `/cleaning/${d.logId}` }
     }
-    case 'edit_production_log': {
-      if (!isAdmin) throw new Error('Admin access required.')
-      const d = action.data
-      if (!d.logId) throw new Error('Could not identify which production log to edit — logId is missing.')
-      const updates = {}
-      ;['notes','deviations','endTime'].forEach(k => { if (d[k] !== undefined) updates[k] = d[k] })
-      await updateDoc(doc(db, 'productionLogs', d.logId), {
-        ...updates, updatedAt: serverTimestamp(),
-        auditLog: [{ action: 'edited via AI agent', changedBy: userInfo, changedAt: now, changes: updates }]
-      })
-      return { label: `Edited Production Log`, navigateTo: `/operations/logs/${d.logId}` }
-    }
     case 'edit_log': {
       if (!isAdmin) throw new Error('Admin access required.')
       const d = action.data
@@ -304,35 +278,6 @@ export async function executeAction(action, currentUser, isAdmin) {
         auditLog: [{ action: 'created via AI agent', changedBy: userInfo, changedAt: now }],
       })
       return { label: `Work Order ${batchNumber} — ${d.product || d.productName}`, navigateTo: `/operations/batches/${r.id}` }
-    }
-    // ── Production Runs (productionLogs) ───────────────────────
-    case 'complete_production_run': {
-      const d = action.data
-      if (!d.productionRunId) throw new Error('productionRunId is required.')
-      const actualQty = Number(d.actualQuantity) || 0
-      const wasteQty = Number(d.wasteQuantity) || 0
-      const netYield = Math.max(0, actualQty - wasteQty)
-
-      // Update production run
-      await updateDoc(doc(db, 'productionLogs', d.productionRunId), {
-        actualQuantity: actualQty, wasteQuantity: wasteQty,
-        status: 'completed', completedAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        auditLog: arrayUnion({ action: 'completed via AI agent', changedBy: userInfo, changedAt: now }),
-      })
-
-      // Auto-create Finished Goods Lot
-      const fgLotNumber = await getNextFgLotNumber()
-      const fgRef = await addDoc(collection(db, 'finishedGoodsLots'), {
-        fgLotNumber, productionRunId: d.productionRunId,
-        workOrderId: d.workOrderId || '', clientOrderId: d.clientOrderId || '',
-        product: d.product || '', actualQuantity: actualQty, wasteQuantity: wasteQty,
-        quantityProduced: netYield, quantityAvailable: netYield, unit: d.unit || '',
-        status: 'hold', qcReleaseStatus: 'pending',
-        notes: d.notes || '', createdDate: serverTimestamp(),
-        createdBy: userInfo, auditLog: [{ action: 'created via AI agent', changedBy: userInfo, changedAt: now }],
-      })
-      return { label: `Production Run completed · FG Lot ${fgLotNumber} created`, navigateTo: `/operations/fg-lots/${fgRef.id}` }
     }
     case 'release_fg_lot': {
       if (!isAdmin) throw new Error('Admin access required.')
