@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import CandyProductionBoard from '../components/production/CandyProductionBoard'
 import PackagingBoard from '../components/production/PackagingBoard'
 import TasksBoard from '../components/production/TasksBoard'
+import PickupOrders from '../components/production/PickupOrders'
 
 const TABS = [
   { key: 'candy',     label: 'Candy Production' },
@@ -21,11 +22,9 @@ export default function ProductionLanding() {
         <div>
           <h1 style={s.title}>{t('Production')}</h1>
           <div style={s.quickLinks}>
-            <Link to="/operations/client-orders" style={s.qLink}>{t('Client Orders')}</Link>
-            <span style={s.dot}>·</span>
-            <Link to="/operations/fg-lots" style={s.qLink}>{t('FG Lots')}</Link>
-            <span style={s.dot}>·</span>
             <Link to="/operations/sops" style={s.qLink}>{t('SOPs')}</Link>
+            <span style={s.dot}>·</span>
+            <Link to="/operations/batches" style={s.qLink}>{t('All Work Orders')}</Link>
           </div>
         </div>
       </div>
@@ -47,6 +46,8 @@ export default function ProductionLanding() {
         {activeTab === 'packaging' && <PackagingBoard />}
         {activeTab === 'tasks'     && <TasksBoard />}
       </div>
+
+      <PickupOrders />
     </div>
   )
 }

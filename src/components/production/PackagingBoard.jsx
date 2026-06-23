@@ -166,12 +166,21 @@ export default function PackagingBoard() {
   )
 }
 
+const FORMAT_LABELS = {
+  bulk_packaged: 'Bulk Packaged',
+  flow_wrapped: 'Flow Wrapped',
+  flow_wrap_boxed: 'Flow Wrap + Boxed',
+  flow_wrap_boxed_display: 'Flow Wrap + Boxed + Display Box',
+}
+
 function OrderDetail({ order }) {
-  const STORAGE_LABELS = { curing_racks: 'Curing Racks', baking_trays: 'Baking Trays', bulk_packaged: 'Bulk Packaged' }
   return (
     <div>
-      <Row label="Client" value={order.clientName} />
-      {order.candyName && <Row label="Candy" value={`${order.candyName}${order.candyQuantity ? ` · ${order.candyQuantity} ${order.candyUnit}` : ''}`} />}
+      {order.batchNumber && <Row label="Batch #" value={order.batchNumber} />}
+      {order.candyName && <Row label="Product" value={order.candyName} />}
+      {order.quantity != null && <Row label="Quantity" value={`${order.quantity} ${order.unit}`} />}
+      {order.packagingFormat && <Row label="Format" value={FORMAT_LABELS[order.packagingFormat] || order.packagingFormat} />}
+      {order.clientName && <Row label="Client" value={order.clientName} />}
       {order.packagingInstructions && (
         <div style={{ padding: '0.5rem 0', borderBottom: '1px solid #f3f4f6' }}>
           <span style={rowLabel}>Instructions</span>
@@ -229,19 +238,26 @@ function SortableCard({ order, canAdvance, advancing, onAdvance, onCardClick }) 
   )
 }
 
+const FORMAT_SHORT = {
+  bulk_packaged: 'Bulk',
+  flow_wrapped: 'Flow Wrap',
+  flow_wrap_boxed: 'Flow Wrap + Box',
+  flow_wrap_boxed_display: 'Flow Wrap + Box + Display',
+}
+
 function OrderCard({ order, canAdvance, advancing, onAdvance, onCardClick }) {
   return (
     <div style={s.card} onClick={() => onCardClick(order)}>
-      <div style={s.clientName}>{order.clientName}</div>
-      {order.candyName && <div style={s.meta}>{order.candyName}</div>}
-      {order.packagingInstructions && (
-        <div style={{ ...s.meta, marginTop: '0.2rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {order.packagingInstructions}
-        </div>
+      {order.batchNumber && <div style={s.batchNum}>{order.batchNumber}</div>}
+      <div style={s.clientName}>{order.candyName || '—'}</div>
+      {order.clientName && <div style={{ ...s.meta, marginBottom: '0.1rem' }}>📦 {order.clientName}</div>}
+      {order.packagingFormat && <div style={{ ...s.meta, color: '#7e22ce' }}>{FORMAT_SHORT[order.packagingFormat] || order.packagingFormat}</div>}
+      {order.quantity != null && (
+        <div style={{ ...s.meta, marginTop: '0.1rem' }}>{order.quantity} {order.unit}</div>
       )}
       {order.finalCount != null && (
         <div style={{ ...s.meta, marginTop: '0.25rem', color: '#16a34a', fontWeight: 600 }}>
-          {order.finalCount.toLocaleString()} {order.finalUnit}
+          ✓ {order.finalCount.toLocaleString()} {order.finalUnit}
         </div>
       )}
       {canAdvance && (
@@ -258,8 +274,8 @@ function OrderCard({ order, canAdvance, advancing, onAdvance, onCardClick }) {
 function CardGhost({ order }) {
   return (
     <div style={{ ...s.card, boxShadow: '0 8px 24px rgba(0,0,0,0.18)', transform: 'rotate(2deg)', cursor: 'grabbing' }}>
-      <div style={s.clientName}>{order.clientName}</div>
-      {order.candyName && <div style={s.meta}>{order.candyName}</div>}
+      {order.batchNumber && <div style={s.batchNum}>{order.batchNumber}</div>}
+      <div style={s.clientName}>{order.candyName || order.clientName}</div>
     </div>
   )
 }
@@ -276,6 +292,7 @@ const s = {
   colBadge: { fontSize: '0.7rem', fontWeight: 700, padding: '0.1rem 0.45rem', borderRadius: 10 },
   colBody: { padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', minHeight: 80 },
   card: { background: '#fff', borderRadius: 8, padding: '0.75rem', border: '1px solid #e5e7eb', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.04)', userSelect: 'none' },
+  batchNum: { fontSize: '0.65rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.04em', marginBottom: '0.2rem' },
   clientName: { fontSize: '0.85rem', fontWeight: 600, color: '#111827', lineHeight: 1.3, marginBottom: '0.2rem' },
   meta: { fontSize: '0.7rem', color: '#6b7280', lineHeight: 1.3 },
   cardFoot: { display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #f3f4f6' },
