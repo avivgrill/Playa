@@ -42,6 +42,13 @@ import ProcessDocDetail from './pages/docs/ProcessDocDetail'
 import FoodSafetyHandbook from './pages/docs/FoodSafetyHandbook'
 import CommitmentToFoodSafety from './pages/docs/CommitmentToFoodSafety'
 import OrgChart from './pages/docs/OrgChart'
+import ManagementProgram from './pages/docs/ManagementProgram'
+import ComplaintsProcedure from './pages/docs/ComplaintsProcedure'
+import DocumentControl from './pages/docs/DocumentControl'
+import TrainingProgram from './pages/docs/TrainingProgram'
+import RegulatoryCompliance from './pages/docs/RegulatoryCompliance'
+import CertificationIntegrity from './pages/docs/CertificationIntegrity'
+import CGMPManual from './pages/docs/CGMPManual'
 import UserRoles from './pages/admin/UserRoles'
 import TimecardAdmin from './pages/admin/TimecardAdmin'
 
@@ -109,6 +116,13 @@ export default function App() {
             <Route path="docs/handbook" element={<FoodSafetyHandbook />} />
             <Route path="docs/commitment" element={<CommitmentToFoodSafety />} />
             <Route path="docs/org-chart" element={<OrgChart />} />
+            <Route path="docs/program" element={<ManagementProgram />} />
+            <Route path="docs/complaints" element={<ComplaintsProcedure />} />
+            <Route path="docs/document-control" element={<DocumentControl />} />
+            <Route path="docs/training" element={<TrainingProgram />} />
+            <Route path="docs/regulatory" element={<RegulatoryCompliance />} />
+            <Route path="docs/certification" element={<CertificationIntegrity />} />
+            <Route path="docs/cgmp" element={<CGMPManual />} />
             {/* Timecard */}
             <Route path="timecard" element={<Timecard />} />
             {/* Admin */}

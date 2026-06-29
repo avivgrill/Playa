@@ -13,10 +13,10 @@ const NAV_ITEMS = [
   {
     label: 'Docs', key: 'docs',
     children: [
+      { label: 'Management Program', path: '/docs/program' },
       { label: 'Process Documentation', path: '/docs/process' },
       { label: 'Food Safety Handbook', path: '/docs/handbook' },
-      { label: 'Commitment to Food Safety', path: '/docs/commitment' },
-      { label: 'Org Chart', path: '/docs/org-chart' },
+      { label: 'cGMP Manual', path: '/docs/cgmp' },
     ],
   },
 ]
