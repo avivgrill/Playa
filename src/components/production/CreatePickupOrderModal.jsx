@@ -40,6 +40,7 @@ export default function CreatePickupOrderModal({ onClose, onCreated }) {
         packagingFormat: FORMAT_LABELS[d.data().packagingFormat] || d.data().packagingFormat || '',
         quantity: d.data().finalCount || d.data().quantity,
         unit: d.data().finalUnit || d.data().unit || 'lbs',
+        ingredientLotId: d.data().packagedIngredientLotId || null,
         label: `${d.data().candyName || 'Packaged'} — ${FORMAT_LABELS[d.data().packagingFormat] || d.data().packagingFormat || ''}${d.data().batchNumber ? ` (${d.data().batchNumber})` : ''}`,
       }))
       const bulkGoods = bulkSnap.docs.map(d => ({
@@ -51,6 +52,7 @@ export default function CreatePickupOrderModal({ onClose, onCreated }) {
         packagingFormat: 'Bulk Packaged',
         quantity: d.data().quantity,
         unit: d.data().unit || 'lbs',
+        ingredientLotId: d.data().ingredientLotId || null,
         label: `${d.data().candyName || 'Bulk'} — Bulk Packaged${d.data().batchNumber ? ` (${d.data().batchNumber})` : ''}`,
       }))
       setGoods([...pkgGoods, ...bulkGoods])
@@ -101,6 +103,7 @@ export default function CreatePickupOrderModal({ onClose, onCreated }) {
         quantityAssigned: Number(quantity),
         unit,
         clientName: clientName.trim(),
+        ingredientLotId: selectedGood.ingredientLotId || null,
         status: 'pending',
         createdAt: serverTimestamp(),
         createdBy: userInfo,

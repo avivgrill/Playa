@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, updateDoc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { input, btn, label } from '../../styles/common'
 
@@ -17,6 +17,22 @@ export default function ConfirmPickupModal({ order, onClose, onConfirmed }) {
     if (!pickedUpBy.trim() || saving) return
     setSaving(true)
     try {
+      // Decrement the packaged goods ingredient lot
+      if (order.ingredientLotId) {
+        await runTransaction(db, async tx => {
+          const lotRef = doc(db, 'ingredientLots', order.ingredientLotId)
+          const snap = await tx.get(lotRef)
+          if (snap.exists()) {
+            const current = snap.data().currentQuantity || 0
+            const newQty = Math.max(0, current - (order.quantityAssigned || 0))
+            tx.update(lotRef, {
+              currentQuantity: newQty,
+              ...(newQty === 0 ? { status: 'used' } : {}),
+            })
+          }
+        })
+      }
+
       await updateDoc(doc(db, 'pickupOrders', order.id), {
         status: 'picked_up',
         pickupDate,

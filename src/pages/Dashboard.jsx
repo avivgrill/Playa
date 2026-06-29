@@ -139,14 +139,6 @@ export default function Dashboard() {
             sublabel={data.openCACount === 0 ? t('Clear') : data.overdueCACount > 0 ? t('{{count}} open · {{overdue}} overdue', { count: data.openCACount, overdue: data.overdueCACount }) : t('{{count}} open', { count: data.openCACount })}
             onClick={() => navigate('/corrective-actions')}
           />
-          <StatusChip
-            done={data.activeBatches.length > 0}
-            warn={false}
-            label={t('Batches')}
-            sublabel={data.activeBatches.length > 0 ? t('{{count}} running', { count: data.activeBatches.length }) : t('None active')}
-            onClick={() => navigate('/production')}
-            neutral={data.activeBatches.length === 0}
-          />
         </div>
       )}
 

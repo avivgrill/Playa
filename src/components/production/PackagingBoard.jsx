@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, getDocs, doc, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore'
+import { collection, getDocs, doc, updateDoc, deleteDoc, writeBatch, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCorners, useDroppable,
@@ -152,8 +152,12 @@ export default function PackagingBoard() {
       )}
 
       {selectedOrder && (
-        <Modal title={`Order — ${selectedOrder.clientName}`} onClose={() => setSelectedOrder(null)} maxWidth={480}>
-          <OrderDetail order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+        <Modal title={`Order — ${selectedOrder.clientName || selectedOrder.candyName}`} onClose={() => setSelectedOrder(null)} maxWidth={480}>
+          <OrderDetail
+            order={selectedOrder}
+            onClose={() => setSelectedOrder(null)}
+            onDeleted={id => { setOrders(prev => prev.filter(o => o.id !== id)); setSelectedOrder(null) }}
+          />
         </Modal>
       )}
 
@@ -173,7 +177,21 @@ const FORMAT_LABELS = {
   flow_wrap_boxed_display: 'Flow Wrap + Boxed + Display Box',
 }
 
-function OrderDetail({ order }) {
+function OrderDetail({ order, onDeleted }) {
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete() {
+    if (!window.confirm('Delete this packaging order? This cannot be undone.')) return
+    setDeleting(true)
+    try {
+      await deleteDoc(doc(db, 'packagingOrders', order.id))
+      onDeleted(order.id)
+    } catch (err) {
+      alert(err.message)
+      setDeleting(false)
+    }
+  }
+
   return (
     <div>
       {order.batchNumber && <Row label="Batch #" value={order.batchNumber} />}
@@ -191,6 +209,15 @@ function OrderDetail({ order }) {
         <Row label="Final Count" value={`${order.finalCount.toLocaleString()} ${order.finalUnit}`} />
       )}
       {order.createdBy && <Row label="Created by" value={order.createdBy.displayName || order.createdBy.email} />}
+      <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #f3f4f6' }}>
+        <button
+          style={{ background: 'transparent', border: '1px solid #dc2626', color: '#dc2626', borderRadius: 7, padding: '0.4rem 0.875rem', fontSize: '0.825rem', cursor: 'pointer' }}
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? 'Deleting…' : 'Delete Order'}
+        </button>
+      </div>
     </div>
   )
 }

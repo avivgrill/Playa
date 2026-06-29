@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { doc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore'
+import { doc, updateDoc, addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
+import { getNextLotNumber } from '../../utils/lotNumber'
 import { input, btn, label } from '../../styles/common'
 
 const STORAGE_OPTIONS = [
@@ -23,25 +24,54 @@ export default function CompleteProductionModal({ batch, onClose, onConfirmed })
     setSaving(true)
     try {
       const userInfo = { uid: currentUser.uid, displayName: currentUser.displayName || currentUser.email, email: currentUser.email }
+      const qty = Number(quantity)
+
+      // 1. Create finished candy lot record
       const lotRef = await addDoc(collection(db, 'finishedCandyLots'), {
         candyName: batch.productName,
         productionOrderId: batch.id,
         batchNumber: batch.batchNumber,
         storageType,
-        quantity: Number(quantity),
+        quantity: qty,
         unit,
         status: 'available',
         createdAt: serverTimestamp(),
         createdBy: userInfo,
       })
+
+      // 2. Create ingredient lot entry so it appears in inventory
+      const lotNumber = await getNextLotNumber()
+      const ingLotRef = await addDoc(collection(db, 'ingredientLots'), {
+        ingredientName: batch.productName,
+        internalLotNumber: lotNumber,
+        supplierLotNumber: batch.batchNumber,
+        type: 'finished_candy',
+        storageType,
+        originalQuantity: qty,
+        currentQuantity: qty,
+        unit,
+        status: 'available',
+        productionOrderId: batch.id,
+        finishedCandyLotId: lotRef.id,
+        receivedDate: Timestamp.now(),
+        receivedBy: userInfo,
+        createdAt: serverTimestamp(),
+      })
+
+      // 3. Back-link the ingredient lot id onto the finished candy lot
+      await updateDoc(lotRef, { ingredientLotId: ingLotRef.id })
+
+      // 4. Mark work order complete
       await updateDoc(doc(db, 'productionBatches', batch.id), {
         status: 'complete',
         finishedCandyLotId: lotRef.id,
-        quantityProduced: Number(quantity),
+        ingredientLotId: ingLotRef.id,
+        quantityProduced: qty,
         unit,
         updatedAt: serverTimestamp(),
       })
-      onConfirmed({ ...batch, status: 'complete', quantityProduced: Number(quantity), unit })
+
+      onConfirmed({ ...batch, status: 'complete', quantityProduced: qty, unit })
     } catch (err) {
       alert(err.message)
     }

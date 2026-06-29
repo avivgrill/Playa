@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query, where, orderBy, doc, deleteDoc } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import Modal from '../Modal'
 import CreatePickupOrderModal from './CreatePickupOrderModal'
@@ -41,6 +41,16 @@ export default function PickupOrders() {
     setConfirmOrder(null)
   }
 
+  async function handleDelete(order) {
+    if (!window.confirm(`Delete pickup order for ${order.clientName}? This cannot be undone.`)) return
+    try {
+      await deleteDoc(doc(db, 'pickupOrders', order.id))
+      setOrders(prev => prev.filter(o => o.id !== order.id))
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
   return (
     <div style={wrap}>
       <div style={header}>
@@ -59,7 +69,7 @@ export default function PickupOrders() {
           {pending.length > 0 && (
             <div style={section}>
               {pending.map(order => (
-                <PickupRow key={order.id} order={order} onPickup={() => setConfirmOrder(order)} />
+                <PickupRow key={order.id} order={order} onPickup={() => setConfirmOrder(order)} onDelete={() => handleDelete(order)} />
               ))}
             </div>
           )}
@@ -69,7 +79,7 @@ export default function PickupOrders() {
               <p style={sectionLabel}>Completed</p>
               <div style={section}>
                 {completed.slice(0, 10).map(order => (
-                  <PickupRow key={order.id} order={order} done />
+                  <PickupRow key={order.id} order={order} done onDelete={() => handleDelete(order)} />
                 ))}
               </div>
             </>
@@ -96,7 +106,7 @@ export default function PickupOrders() {
   )
 }
 
-function PickupRow({ order, onPickup, done }) {
+function PickupRow({ order, onPickup, done, onDelete }) {
   return (
     <div style={row}>
       <div style={rowLeft}>
@@ -115,12 +125,15 @@ function PickupRow({ order, onPickup, done }) {
           </div>
         )}
       </div>
-      {!done && (
-        <button style={pickupBtn} onClick={onPickup}>
-          Pickup →
-        </button>
-      )}
-      {done && <span style={doneBadge}>✓ Done</span>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', alignItems: 'flex-end', flexShrink: 0 }}>
+        {!done && (
+          <button style={pickupBtn} onClick={onPickup}>
+            Pickup →
+          </button>
+        )}
+        {done && <span style={doneBadge}>✓ Done</span>}
+        <button style={deleteRowBtn} onClick={onDelete}>✕</button>
+      </div>
     </div>
   )
 }
@@ -138,4 +151,5 @@ const batchTag = { fontSize: '0.7rem', fontWeight: 700, background: '#f3f4f6', c
 const rowMeta = { fontSize: '0.78rem', color: '#9ca3af', marginTop: '0.15rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }
 const pickupBtn = { background: '#f0fdf4', color: '#16a34a', border: '1.5px solid #bbf7d0', borderRadius: 7, padding: '0.4rem 0.875rem', fontSize: '0.825rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }
 const doneBadge = { fontSize: '0.78rem', fontWeight: 600, color: '#16a34a', whiteSpace: 'nowrap' }
+const deleteRowBtn = { background: 'transparent', border: 'none', color: '#d1d5db', fontSize: '0.75rem', cursor: 'pointer', padding: '0.1rem 0.25rem', lineHeight: 1 }
 const muted = { color: '#9ca3af', fontSize: '0.875rem' }

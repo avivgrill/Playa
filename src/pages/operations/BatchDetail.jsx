@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   doc, getDoc, collection, query, where, getDocs,
-  addDoc, updateDoc, runTransaction, serverTimestamp, Timestamp, arrayUnion,
+  addDoc, updateDoc, deleteDoc, runTransaction, serverTimestamp, Timestamp, arrayUnion,
 } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../contexts/AuthContext'
@@ -47,6 +47,7 @@ export default function BatchDetail({ id: idProp, onClose }) {
   const [addingUsage, setAddingUsage] = useState(false)
 
   const [updatingStatus, setUpdatingStatus] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   async function load() {
     const [batchSnap, allocSnap, usageSnap] = await Promise.all([
@@ -172,6 +173,21 @@ export default function BatchDetail({ id: idProp, onClose }) {
     })
     setBatch(prev => ({ ...prev, status: newStatus }))
     setUpdatingStatus(false)
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(`Delete work order ${batch.batchNumber}? This cannot be undone.`)) return
+    setDeleting(true)
+    try {
+      const usageSnap = await getDocs(query(collection(db, 'ingredientUsage'), where('batchId', '==', id)))
+      await Promise.all(usageSnap.docs.map(d => deleteDoc(d.ref)))
+      await deleteDoc(doc(db, 'productionBatches', id))
+      if (onClose) onClose()
+      else navigate('/production')
+    } catch (err) {
+      alert(`Delete failed: ${err.message}`)
+      setDeleting(false)
+    }
   }
 
   if (loading) return <p style={{ color: '#9ca3af', padding: '1rem' }}>{t('Loading…')}</p>
@@ -410,6 +426,16 @@ export default function BatchDetail({ id: idProp, onClose }) {
           ))}
         </div>
       )}
+
+      <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #f3f4f6' }}>
+        <button
+          style={{ background: 'transparent', border: '1px solid #dc2626', color: '#dc2626', borderRadius: 7, padding: '0.4rem 0.875rem', fontSize: '0.825rem', cursor: 'pointer' }}
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? t('Deleting…') : t('Delete Work Order')}
+        </button>
+      </div>
     </div>
   )
 }

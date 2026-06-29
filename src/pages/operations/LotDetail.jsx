@@ -202,6 +202,9 @@ export default function LotDetail() {
           {lot.supplierLotNumber && <Row label={t('Supplier Lot #')} value={lot.supplierLotNumber} />}
           {lot.supplier && <Row label={t('Supplier')} value={lot.supplier} />}
           <Row label={t('Received Date')} value={formatDate(lot.receivedDate)} />
+          {lot.expirationDate && (
+            <Row label={t('Expiration Date')} value={lot.expirationDate} highlight={new Date(lot.expirationDate) < new Date()} />
+          )}
           <Row label={t('Received By')} value={lot.receivedBy?.displayName || lot.receivedBy?.email || '—'} />
           <Row label={t('Storage Location')} value={lot.palletNumber ? `${lot.storageLocation} · Pallet ${lot.palletNumber}` : (lot.storageLocation || '—')} />
           {lot.notes && <Row label={t('Notes')} value={lot.notes} />}
@@ -261,11 +264,13 @@ export default function LotDetail() {
   )
 }
 
-function Row({ label, value }) {
+function Row({ label, value, highlight }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f3f4f6', fontSize: '0.875rem' }}>
       <span style={{ color: '#6b7280' }}>{label}</span>
-      <span style={{ color: '#111827', fontWeight: 500, textAlign: 'right', maxWidth: '65%' }}>{value}</span>
+      <span style={{ color: highlight ? '#dc2626' : '#111827', fontWeight: highlight ? 700 : 500, textAlign: 'right', maxWidth: '65%' }}>
+        {value}{highlight ? ' ⚠ Expired' : ''}
+      </span>
     </div>
   )
 }

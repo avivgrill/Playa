@@ -13,7 +13,8 @@ export default function LotList() {
   const { t } = useTranslation()
   const [lots, setLots] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('available')
+  const [filter, setFilter] = useState('active')
+  const [typeFilter, setTypeFilter] = useState('all')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
@@ -25,7 +26,18 @@ export default function LotList() {
   }, [])
 
   const filtered = lots
-    .filter(l => filter === 'all' || l.status === filter)
+    .filter(l => {
+      if (filter === 'active') return (l.currentQuantity ?? 0) > 0
+      if (filter === 'used') return l.status === 'used'
+      if (filter === 'recalled') return l.status === 'recalled'
+      return true // 'all'
+    })
+    .filter(l => {
+      if (typeFilter === 'ingredients') return !l.type || l.type === 'raw_ingredient'
+      if (typeFilter === 'finished_candy') return l.type === 'finished_candy'
+      if (typeFilter === 'packaged_goods') return l.type === 'packaged_goods'
+      return true // 'all'
+    })
     .filter(l => {
       if (!search.trim()) return true
       const s = search.toLowerCase()
@@ -50,12 +62,21 @@ export default function LotList() {
         placeholder={t('Search ingredient, lot number…')}
       />
 
-      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-        {['available', 'hold', 'recalled', 'used', 'all'].map(f => (
+      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+        {[['active', t('Active')], ['used', t('Used')], ['recalled', t('Recalled')], ['all', t('All')]].map(([f, lbl]) => (
           <button key={f}
             style={{ ...filterBtn, background: filter === f ? '#1d4ed8' : '#fff', color: filter === f ? '#fff' : '#374151' }}
             onClick={() => setFilter(f)}>
-            {f === 'all' ? t('All') : f.charAt(0).toUpperCase() + f.slice(1)}
+            {lbl}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {[['all', t('All Types')], ['ingredients', t('Ingredients')], ['finished_candy', t('Finished Candy')], ['packaged_goods', t('Packaged Goods')]].map(([f, lbl]) => (
+          <button key={f}
+            style={{ ...filterBtn, background: typeFilter === f ? '#374151' : '#fff', color: typeFilter === f ? '#fff' : '#374151', fontSize: '0.75rem' }}
+            onClick={() => setTypeFilter(f)}>
+            {lbl}
           </button>
         ))}
       </div>
@@ -68,10 +89,19 @@ export default function LotList() {
           onClick={() => navigate(`/operations/lots/${lot.id}`)}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
             <div>
-              <div style={{ fontWeight: 700, color: '#111827' }}>{lot.ingredientName}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 700, color: '#111827' }}>{lot.ingredientName}</span>
+                {lot.type === 'finished_candy' && <span style={typeBadge('#d97706')}>Finished Candy</span>}
+                {lot.type === 'packaged_goods' && <span style={typeBadge('#7e22ce')}>Packaged</span>}
+              </div>
               <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.1rem' }}>{lot.internalLotNumber}</div>
-              {lot.supplierLotNumber && <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{t('Supplier')}: {lot.supplierLotNumber}</div>}
+              {lot.supplierLotNumber && <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{lot.type === 'finished_candy' || lot.type === 'packaged_goods' ? t('Batch') : t('Supplier')}: {lot.supplierLotNumber}</div>}
               <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{t('Received')} {formatDate(lot.receivedDate)}</div>
+              {lot.expirationDate && (
+                <div style={{ fontSize: '0.75rem', color: new Date(lot.expirationDate) < new Date() ? '#dc2626' : '#9ca3af', fontWeight: new Date(lot.expirationDate) < new Date() ? 600 : 400 }}>
+                  {t('Exp')} {lot.expirationDate}{new Date(lot.expirationDate) < new Date() ? ' ⚠' : ''}
+                </div>
+              )}
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               <div style={{ fontWeight: 700, color: STATUS_COLORS[lot.status] || '#374151' }}>
@@ -90,6 +120,7 @@ export default function LotList() {
 const pageTitle = { fontSize: '1.25rem', fontWeight: 700, color: '#111827' }
 const muted = { color: '#9ca3af', fontSize: '0.875rem' }
 const filterBtn = { padding: '0.35rem 0.65rem', border: '1px solid #d1d5db', borderRadius: 6, fontSize: '0.8rem', cursor: 'pointer' }
+const typeBadge = color => ({ fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.45rem', borderRadius: 10, background: color + '18', color })
 const searchInput = {
   display: 'block', width: '100%', padding: '0.7rem 0.875rem',
   border: '1px solid #d1d5db', borderRadius: 8, fontSize: '1rem', background: '#fff',

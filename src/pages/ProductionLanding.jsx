@@ -24,7 +24,7 @@ export default function ProductionLanding() {
           <div style={s.quickLinks}>
             <Link to="/operations/sops" style={s.qLink}>{t('SOPs')}</Link>
             <span style={s.dot}>·</span>
-            <Link to="/operations/batches" style={s.qLink}>{t('All Work Orders')}</Link>
+            <Link to="/production/log" style={s.qLink}>{t('Production Log')}</Link>
           </div>
         </div>
       </div>

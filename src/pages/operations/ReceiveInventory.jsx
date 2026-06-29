@@ -27,6 +27,7 @@ export default function ReceiveInventory({ onClose }) {
     quantity: '',
     unit: '',
     dateReceived: new Date().toISOString().split('T')[0],
+    expirationDate: '',
     storageLocation: 'Dry Storage',
     palletNumber: '',
     notes: '',
@@ -114,6 +115,7 @@ export default function ReceiveInventory({ onClose }) {
         unit: form.unit,
         storageLocation: form.storageLocation,
         palletNumber: form.storageLocation === 'QX Warehouse' ? form.palletNumber.trim() : '',
+        expirationDate: form.expirationDate || null,
         status: 'available',
         receivedBy: userInfo,
         notes: form.notes || '',
@@ -287,6 +289,9 @@ export default function ReceiveInventory({ onClose }) {
 
         <label style={label}>{t('Date Received')}</label>
         <input style={input} type="date" value={form.dateReceived} onChange={set('dateReceived')} />
+
+        <label style={label}>{t('Expiration Date')} <span style={{ color: '#9ca3af', fontWeight: 400 }}>({t('optional')})</span></label>
+        <input style={input} type="date" value={form.expirationDate} onChange={set('expirationDate')} />
 
         <label style={label}>{t('Storage Location')}</label>
         <select style={input} value={form.storageLocation} onChange={set('storageLocation')}>

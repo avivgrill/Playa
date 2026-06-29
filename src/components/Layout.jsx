@@ -10,6 +10,13 @@ const NAV_ITEMS = [
   { label: 'Production', path: '/production' },
   { label: 'Inventory', path: '/inventory' },
   { label: 'Records', path: '/records' },
+  {
+    label: 'Docs', key: 'docs',
+    children: [
+      { label: 'Process Documentation', path: '/docs/process' },
+      { label: 'Food Safety Handbook', path: '/docs/handbook' },
+    ],
+  },
 ]
 
 function buildNavItems(isAdmin, hasTimecard) {
@@ -63,6 +70,7 @@ export default function Layout() {
   function isActive(item) {
     if (item.path === '/dashboard') return location.pathname === '/dashboard'
     if (item.path) return location.pathname.startsWith(item.path)
+    if (item.children) return item.children.some(c => location.pathname.startsWith(c.path))
     return false
   }
 

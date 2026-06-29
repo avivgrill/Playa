@@ -84,6 +84,7 @@ export default function NewPackagingOrderModal({ onClose, onCreated }) {
       const userInfo = { uid: currentUser.uid, displayName: currentUser.displayName || currentUser.email, email: currentUser.email }
       const ref = await addDoc(collection(db, 'packagingOrders'), {
         finishedCandyLotId: selectedLotId || null,
+        sourceIngredientLotId: selectedLot?.ingredientLotId || null,
         candyName: selectedLot?.candyName || '',
         batchNumber: selectedLot?.batchNumber || '',
         quantity: Number(quantity),
