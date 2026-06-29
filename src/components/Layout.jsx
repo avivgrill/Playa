@@ -15,6 +15,8 @@ const NAV_ITEMS = [
     children: [
       { label: 'Process Documentation', path: '/docs/process' },
       { label: 'Food Safety Handbook', path: '/docs/handbook' },
+      { label: 'Commitment to Food Safety', path: '/docs/commitment' },
+      { label: 'Org Chart', path: '/docs/org-chart' },
     ],
   },
 ]

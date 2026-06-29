@@ -40,6 +40,8 @@ import InventoryLanding from './pages/InventoryLanding'
 import ProcessDocs from './pages/docs/ProcessDocs'
 import ProcessDocDetail from './pages/docs/ProcessDocDetail'
 import FoodSafetyHandbook from './pages/docs/FoodSafetyHandbook'
+import CommitmentToFoodSafety from './pages/docs/CommitmentToFoodSafety'
+import OrgChart from './pages/docs/OrgChart'
 import UserRoles from './pages/admin/UserRoles'
 import TimecardAdmin from './pages/admin/TimecardAdmin'
 
@@ -105,6 +107,8 @@ export default function App() {
             <Route path="docs/process" element={<ProcessDocs />} />
             <Route path="docs/process/:id" element={<ProcessDocDetail />} />
             <Route path="docs/handbook" element={<FoodSafetyHandbook />} />
+            <Route path="docs/commitment" element={<CommitmentToFoodSafety />} />
+            <Route path="docs/org-chart" element={<OrgChart />} />
             {/* Timecard */}
             <Route path="timecard" element={<Timecard />} />
             {/* Admin */}
